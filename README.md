@@ -10,7 +10,9 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
     - [Create a config file for Helm install](#create-a-config-file-for-helm-install)
     - [Deploy using Helm](#deploy-using-helm)
   - [Workload Cluster](#workload-cluster)
-
+    - [Create Secret for Github access:](#create-secret-for-github-access)
+    - [Deploy Manifests](#deploy-manifests)
+    
 ## Deploying CKO
 
 ### Control Cluster
@@ -34,6 +36,7 @@ helm install \
 ```
 
 #### Create a config file for Helm install
+CKO follows the Gitops model for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below (you can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github).
 
 ``` bash
 
@@ -48,12 +51,12 @@ extraEnv: []
 
 gitConfig:
   cko_git_config: |-
-    git_repo: <git-repo-addr>
-    git_dir: <top-level-git-dir>
-    git_branch: <git-branch-name>
-    git_token: <git-pat>
-    git_user: <git-user>
-    git_email: <git-email>
+    git_repo: https://github.com/<OWNER>/<REPO>
+    git_dir: <DIR>
+    git_branch: <BRANCH NAME>
+    git_token: <GIT PAT>
+    git_user: <GIT USER>
+    git_email: <GIT EMAIL>
 EOF
 ```
 
@@ -67,6 +70,25 @@ helm install netop-org-manager cko/netop-org-manager -n netop-org-manager --crea
 ```
 
 ### Workload Cluster
+
+#### Create Secret for Github access:
+Provide the same Git repository details as those in the Control Cluster.
+
+```bash
+kubectl create secret generic cko-config -n netop-manager-system \
+--from-literal=repo=https://github.com/<OWNER>/<REPO> \
+--from-literal=dir=<DIR> \
+--from-literal=branch=<BRANCH NAME> \
+--from-literal=token=<GIT PAT> \
+--from-literal=user=<GIT USER> \
+--from-literal=email=<GIT EMAIL> \
+--from-literal=systemid=<SYSTEM ID> \
+--from-literal=http_proxy=<HTTP_PROXY> \
+--from-literal=https_proxy=<HTTPS_PROXY> \
+--from-literal=no_proxy=<NO_PROXY>
+```
+
+#### Deploy Manifests
 
 For OpenShift Cluster:
 
