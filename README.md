@@ -12,7 +12,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [Workload Cluster](#workload-cluster)
     - [Create Secret for Github access:](#create-secret-for-github-access)
     - [Deploy Manifests](#deploy-manifests)
-    
+
 ## Deploying CKO
 
 ### Control Cluster
@@ -41,14 +41,6 @@ CKO follows the Gitops model for syncing configuration between Control and Workl
 ``` bash
 
 cat > my_values.yaml << EOF
-extraEnv: []
-  - name: HTTP_PROXY
-    value: <add-your-http-proxy-addr:port>
-  - name: HTTPS_PROXY
-    value: <add-your-https-proxy-addr:port>
-  - name: NO_PROXY
-    value: 10.96.0.1 
-
 gitConfig:
   cko_git_config: |-
     git_repo: https://github.com/<OWNER>/<REPO>
@@ -57,6 +49,15 @@ gitConfig:
     git_token: <GIT PAT>
     git_user: <GIT USER>
     git_email: <GIT EMAIL>
+
+extraEnv: []
+  - name: HTTP_PROXY
+    value: <add-your-http-proxy-addr:port>
+  - name: HTTPS_PROXY
+    value: <add-your-https-proxy-addr:port>
+  - name: NO_PROXY
+    value: 10.96.0.1 
+
 EOF
 ```
 
