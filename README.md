@@ -1,6 +1,16 @@
 # CKO
 Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubernetes clusters and more
 
+# Table of Contents
+
+- [Deploying CKO](#deploying-cko)
+  - [Control Cluster](#control-cluster)
+    - [Prequisites](#prequisites)
+    - [Install cert-manager](#install-cert-manager)
+    - [Create a config file for Helm install](#create-a-config-file-for-helm-install)
+    - [Deploy using Helm](#deploy-using-helm)
+  - [Workload Cluster](#workload-cluster)
+
 ## Deploying CKO
 
 ### Control Cluster
@@ -23,9 +33,7 @@ helm install \
   --set installCRDs=true
 ```
 
-#### Deploy CKO in Control Cluster
-
-##### Create a config file for helm install
+#### Create a config file for Helm install
 
 ``` bash
 
@@ -49,7 +57,7 @@ gitConfig:
 EOF
 ```
 
-##### Deploy using Helm and above config file
+#### Deploy using Helm
 
 ``` bash
 
@@ -58,7 +66,7 @@ helm repo update
 helm install netop-org-manager cko/netop-org-manager -n netop-org-manager --create-namespace --version 0.9.0 -f my_values.yaml
 ```
 
-### Deploy CKO in Workload Cluster
+### Workload Cluster
 
 For OpenShift Cluster:
 
