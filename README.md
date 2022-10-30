@@ -23,6 +23,12 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
       - [Unmanaged CNI](#unmanaged-cni)
       - [Managed CNI](#managed-cni)
     - [Greenfield Clusters](#greenfield-clusters)
+    - [Managing Clusters as a Group](#managing-clusters-as-a-group)
+    - [Managing Clusters Individually](#managing-clusters-individually)
+    - [Customizing Default Behaviors](#customizing-default-behaviors)
+    - [Upgrade Managed CNI Operators](#upgrade-managed-cni-operators)
+    - [Upgrade CKO in Workload Cluster](#upgrade-cko-in-workload-cluster)
+    - [Upgrade Control Cluster](#upgrade-control-cluster)
   - [API Reference](#api-reference)
   - [Sample Configuration](#sample-configuration)
 - [Observability & Diagnostics](#observability--diagnostics)
@@ -32,7 +38,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
   - [Repositories](#repositories)
-  - [Contrubting Guide](#contrubting-guide)
+  - [Contributing to CKO](#contributing-to-cko)
 
 ## Introduction
 
@@ -152,6 +158,18 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 
 #### Greenfield Clusters
 
+#### Managing Clusters as a Group
+
+#### Managing Clusters Individually
+
+#### Customizing Default Behaviors
+
+#### Upgrade Managed CNI Operators
+
+#### Upgrade CKO in Workload Cluster
+
+#### Upgrade Control Cluster
+
 ### API Reference
 
 ### Sample Configuration
@@ -172,4 +190,4 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 
 ### Contributing to CKO
 
-![Developer Guide](docs/dev-guide/dev-and-contribute.md)
+[Developer Guide](docs/dev-guide/dev-and-contribute.md)
