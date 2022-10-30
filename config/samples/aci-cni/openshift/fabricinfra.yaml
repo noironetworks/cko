@@ -1,0 +1,62 @@
+apiVersion: netop.mgr/v1alpha1
+kind: FabricInfra
+metadata:
+  labels:
+    fabric: 4.2.7f
+    site: BUILDING-15-LAB 
+  name: hyperflex
+  namespace: netop-manager
+spec:
+  credentials:
+    hosts:
+    - 10.10.10.10
+    secretRef:
+      name: apic-credentials
+      username: username
+      password: password
+  fabric_type: aci
+  infra_vlan: 3901
+  mcast_subnets:
+    - 225.91.0.0/16
+  internal_subnets:
+    - 10.2.0.1/16
+    - 10.5.0.1/16
+    - 192.168.57.1/24
+  external_subnets:
+    - 10.3.0.1/24
+    - 10.4.0.1/24
+  vlans:
+    - 291
+    - 292
+  contexts:
+    context-1:
+      aep: hypf-aep
+      l3out:
+        name: acc_l3out
+        external_networks:
+        - acc_net
+      vrf:
+        name: acc_test
+        tenant: common
+  topology:
+    rack:
+    - id: 1
+      aci_pod_id: 1
+      leaf:
+      - id: 101
+      - id: 102
+      node:
+      - name: k8s-node1
+      - name: k8s-node2
+    - id: 2
+      aci_pod_id: 1
+      leaf:
+      - id: 103
+      - id: 104
+      node:
+      - name: k8s-node3
+      - name: k8s-node4
+  bgp:
+    remote_as_numbers:
+      - 64512
+    aci_as_number: 2

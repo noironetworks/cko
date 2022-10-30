@@ -13,6 +13,16 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
     - [Create Secret for Github access:](#create-secret-for-github-access)
     - [Deploy Manifests](#deploy-manifests)
 
+## Introduction
+
+![Control and Workload Cluster](docs/user-guide/diagrams/control-and-workload-clusters.drawio.png)
+
+## Features
+
+### Supported Integrations
+
+### Under Development
+
 ## Deploying CKO
 
 ### Control Cluster
@@ -106,3 +116,9 @@ For non-OpenShift Cluster:
 kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests/0.9.0/workload/netop-manager.yaml
 kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests/0.9.0/workload/platformInstaller.yaml
 ```
+
+## Using CKO
+
+## Troubleshooting
+
+## Contributing

@@ -1,0 +1,79 @@
+apiVersion: netop.mgr/v1alpha1
+kind: FabricInfra
+metadata:
+  name: k8s-bm-2
+  namespace: netop-manager
+  labels:
+    fabric: on-prem-dev-infra
+    site: bldg-15-lab
+spec:
+  credentials:
+    hosts:
+    - 10.10.10.10
+    secretRef:
+      name: apic-credentials
+      username: username
+      password: password
+  fabric_type: aci
+  infra_vlan: 4093
+  mcast_subnets:
+    - 225.114.0.0/16
+    - 225.115.0.0/16
+  internal_subnets:
+    - 1.100.101.1/16
+    - 2.100.101.1/16
+    - 10.5.0.1/16
+    - 10.6.0.1/16
+    - 20.2.0.1/16
+    - 20.5.0.1/16
+  external_subnets:
+    - 10.3.0.1/16
+    - 10.4.0.1/16
+    - 20.3.0.1/16
+    - 20.4.0.1/16
+  vlans:
+    - 101
+    - 102
+    - 103
+    - 104
+  contexts:
+    context-1:
+      aep: bm-srvrs-aep
+      l3out:
+        name: l3out-1
+        external_networks:
+        - l3out-1_epg
+      vrf:
+        name: l3out-1_vrf
+        tenant: common
+    context-2:
+      aep: bm-srvrs-calico-aep
+      l3out:
+        name: l3out-3
+        external_networks:
+        - l3out-3_epg
+      vrf:
+        name: l3out-3_vrf
+        tenant: common
+  topology:
+    rack:
+    - id: 1
+      aci_pod_id: 1
+      leaf:
+      - id: 101
+      - id: 102
+      node:
+      - name: k8s-node1
+      - name: k8s-node2
+    - id: 2
+      aci_pod_id: 1
+      leaf:
+      - id: 103
+      - id: 104
+      node:
+      - name: k8s-node3
+      - name: k8s-node4
+  bgp:
+    remote_as_numbers:
+      - 64512
+    aci_as_number: 2

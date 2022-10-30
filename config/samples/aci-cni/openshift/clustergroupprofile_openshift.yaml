@@ -1,0 +1,22 @@
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterGroupProfile
+metadata:
+  labels:
+    computes: NOVA
+    distro: K8S-1.21
+    location: ON-PREM
+    network-infra: ACI
+    pod-network: aci-cni
+  name: k8s-1.21
+  namespace: netop-manager
+spec:
+  selector:
+    matchLabels:
+      fabric: 4.2.7f
+      site: BUILDING-15-LAB
+  config_overrides:    
+    cni: aci
+    distro:
+      type: openshift
+      release: "4.9"
+      platform: esx

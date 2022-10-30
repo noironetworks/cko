@@ -1,0 +1,17 @@
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterGroupProfile
+metadata:
+  name: for-calico-cni
+  namespace: netop-manager
+  labels:
+    distro: kubernetes
+    location: on-prem
+    pod-network: calico
+    cluster: calico-cni
+spec:
+  selector:
+    matchLabels:
+      fabric : on-prem-dev-infra
+      site: bldg-15-lab
+  config_overrides:
+    cni: calico
