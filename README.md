@@ -3,6 +3,10 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 # Table of Contents
 
+- [Introduction](#introduction)
+- [Features](#features)
+  - [Supported Integrations](#supported-integrations)
+  - [Under Development](#under-development)
 - [Deploying CKO](#deploying-cko)
   - [Control Cluster](#control-cluster)
     - [Prequisites](#prequisites)
@@ -12,6 +16,23 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [Workload Cluster](#workload-cluster)
     - [Create Secret for Github access:](#create-secret-for-github-access)
     - [Deploy Manifests](#deploy-manifests)
+- [Using CKO](#using-cko)
+  - [Workflows](#workflows)
+    - [Fabric Onboarding](#fabric-onboarding)
+    - [Brownfield Clusters](#brownfield-clusters)
+      - [Unmanaged CNI](#unmanaged-cni)
+      - [Managed CNI](#managed-cni)
+    - [Greenfield Clusters](#greenfield-clusters)
+  - [API Reference](#api-reference)
+  - [Sample Configuration](#sample-configuration)
+- [Observability & Diagnostics](#observability--diagnostics)
+  - [Tracking CKO Status](#tracking-cko-status)
+  - [Tracking Workload Clusters](#tracking-workload-clusters)
+    - [Connectivity Checker](#connectivity-checker)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+  - [Repositories](#repositories)
+  - [Contrubting Guide](#contrubting-guide)
 
 ## Introduction
 
@@ -119,6 +140,36 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 
 ## Using CKO
 
+### Workflows
+
+#### Fabric Onboarding
+
+#### Brownfield Clusters
+
+##### Unmanaged CNI
+
+##### Managed CNI
+
+#### Greenfield Clusters
+
+### API Reference
+
+### Sample Configuration
+
+## Observability & Diagnostics
+
+### Tracking CKO Status
+
+### Tracking Workload Clusters
+
+#### Connectivity Checker
+
 ## Troubleshooting
 
 ## Contributing
+
+### Repositories
+
+### Contributing to CKO
+
+![Developer Guide](docs/dev-guide/dev-and-contribute.md)
