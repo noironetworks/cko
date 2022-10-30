@@ -3,63 +3,63 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 # Table of Contents
 
-- [Introduction](#introduction)
-- [Features](#features)
-  - [Supported Integrations](#supported-integrations)
-  - [Under Development](#under-development)
-- [Deploying CKO](#deploying-cko)
-  - [Control Cluster](#control-cluster)
-    - [Prequisites](#prequisites)
-    - [Install cert-manager](#install-cert-manager)
-    - [Create a config file for Helm install](#create-a-config-file-for-helm-install)
-    - [Deploy using Helm](#deploy-using-helm)
-  - [Workload Cluster](#workload-cluster)
-    - [Create Secret for Github access:](#create-secret-for-github-access)
-    - [Deploy Manifests](#deploy-manifests)
-- [Using CKO](#using-cko)
-  - [Workflows](#workflows)
-    - [Fabric Onboarding](#fabric-onboarding)
-    - [Brownfield Clusters](#brownfield-clusters)
-      - [Unmanaged CNI](#unmanaged-cni)
-      - [Managed CNI](#managed-cni)
-    - [Greenfield Clusters](#greenfield-clusters)
-    - [Managing Clusters as a Group](#managing-clusters-as-a-group)
-    - [Managing Clusters Individually](#managing-clusters-individually)
-    - [Customizing Default Behaviors](#customizing-default-behaviors)
-    - [Upgrade Managed CNI Operators](#upgrade-managed-cni-operators)
-    - [Upgrade CKO in Workload Cluster](#upgrade-cko-in-workload-cluster)
-    - [Upgrade Control Cluster](#upgrade-control-cluster)
-  - [API Reference](#api-reference)
-  - [Sample Configuration](#sample-configuration)
-- [Observability & Diagnostics](#observability--diagnostics)
-  - [Tracking CKO Status](#tracking-cko-status)
-  - [Tracking Workload Clusters](#tracking-workload-clusters)
-    - [Connectivity Checker](#connectivity-checker)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-  - [Repositories](#repositories)
-  - [Contributing to CKO](#contributing-to-cko)
+- [1. Introduction](#1-introduction)
+- [2. Features](#2-features)
+  - [2.1 Supported Integrations](#21-supported-integrations)
+  - [2.2 Under Development](#22-under-development)
+- [3. Deploying CKO](#3-deploying-cko)
+  - [3.1 Control Cluster](#31-control-cluster)
+    - [3.1.1 Prequisites](#311-prequisites)
+    - [3.1.2 Install cert-manager](#312-install-cert-manager)
+    - [3.1.3 Create a config file for Helm install](#313-create-a-config-file-for-helm-install)
+    - [3.1.4 Deploy using Helm](#314-deploy-using-helm)
+  - [3.2 Workload Cluster](#32-workload-cluster)
+    - [3.2.1 Create Secret for Github access:](#321-create-secret-for-github-access)
+    - [3.2.2 Deploy Manifests](#322-deploy-manifests)
+- [4. Using CKO](#4-using-cko)
+  - [4.1 Workflows](#41-workflows)
+    - [4.1.1 Fabric Onboarding](#411-fabric-onboarding)
+    - [4.1.2 Brownfield Clusters](#412-brownfield-clusters)
+      - [4.1.2.1 Unmanaged CNI](#4121-unmanaged-cni)
+      - [4.1.2.2 Managed CNI](#4122-managed-cni)
+    - [4.1.3 Greenfield Clusters](#413-greenfield-clusters)
+    - [4.1.4 Managing Clusters as a Group](#414-managing-clusters-as-a-group)
+    - [4.1.5 Managing Clusters Individually](#415-managing-clusters-individually)
+    - [4.1.6 Customizing Default Behaviors](#416-customizing-default-behaviors)
+    - [4.1.7 Upgrade Managed CNI Operators](#417-upgrade-managed-cni-operators)
+    - [4.1.8 Upgrade CKO in Workload Cluster](#418-upgrade-cko-in-workload-cluster)
+    - [4.1.9 Upgrade Control Cluster](#419-upgrade-control-cluster)
+  - [4.2 API Reference](#42-api-reference)
+  - [4.3 Sample Configuration](#43-sample-configuration)
+- [5. Observability & Diagnostics](#5-observability--diagnostics)
+  - [5.1 Tracking CKO Status](#51-tracking-cko-status)
+  - [5.2 Tracking Workload Clusters](#52-tracking-workload-clusters)
+    - [5.2.1 Connectivity Checker](#521-connectivity-checker)
+- [6. Troubleshooting](#6-troubleshooting)
+- [7. Contributing](#7-contributing)
+  - [7.1 Repositories](#71-repositories)
+  - [7.2 Contributing to CKO](#72-contributing-to-cko)
 
-## Introduction
+## 1. Introduction
 
 ![Control and Workload Cluster](docs/user-guide/diagrams/control-and-workload-clusters.drawio.png)
 
-## Features
+## 2. Features
 
-### Supported Integrations
+### 2.1 Supported Integrations
 
-### Under Development
+### 2.2 Under Development
 
-## Deploying CKO
+## 3. Deploying CKO
 
-### Control Cluster
+### 3.1 Control Cluster
 
-#### Prequisites
+#### 3.1.1 Prequisites
 * A functional Kubernetes cluster with reachability to the ACI Fabric. (A single node cluster is adequate.)
 * kubectl
 * Helm
 
-#### Install cert-manager
+#### 3.1.2 Install cert-manager
 
 ``` bash
 helm repo add jetstack https://charts.jetstack.io
@@ -72,7 +72,7 @@ helm install \
   --set installCRDs=true
 ```
 
-#### Create a config file for Helm install
+#### 3.1.3 Create a config file for Helm install
 CKO follows the Gitops model for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below (you can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github).
 
 ``` bash
@@ -93,12 +93,12 @@ extraEnv: []
   - name: HTTPS_PROXY
     value: <add-your-https-proxy-addr:port>
   - name: NO_PROXY
-    value: 10.96.0.1 
+    value: 10.96.0.1
 
 EOF
 ```
 
-#### Deploy using Helm
+#### 3.1.4 Deploy using Helm
 
 ``` bash
 
@@ -107,9 +107,9 @@ helm repo update
 helm install netop-org-manager cko/netop-org-manager -n netop-org-manager --create-namespace --version 0.9.0 -f my_values.yaml
 ```
 
-### Workload Cluster
+### 3.2 Workload Cluster
 
-#### Create Secret for Github access:
+#### 3.2.1 Create Secret for Github access:
 Provide the same Git repository details as those in the Control Cluster.
 
 ```bash
@@ -126,7 +126,7 @@ kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=no_proxy=<NO_PROXY>
 ```
 
-#### Deploy Manifests
+#### 3.2.2 Deploy Manifests
 
 For OpenShift Cluster:
 
@@ -144,50 +144,50 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests/0.9.0/workload/platformInstaller.yaml
 ```
 
-## Using CKO
+## 4. Using CKO
 
-### Workflows
+### 4.1 Workflows
 
-#### Fabric Onboarding
+#### 4.1.1 Fabric Onboarding
 
-#### Brownfield Clusters
+#### 4.1.2 Brownfield Clusters
 
-##### Unmanaged CNI
+##### 4.1.2.1 Unmanaged CNI
 
-##### Managed CNI
+##### 4.1.2.2 Managed CNI
 
-#### Greenfield Clusters
+#### 4.1.3 Greenfield Clusters
 
-#### Managing Clusters as a Group
+#### 4.1.4 Managing Clusters as a Group
 
-#### Managing Clusters Individually
+#### 4.1.5 Managing Clusters Individually
 
-#### Customizing Default Behaviors
+#### 4.1.6 Customizing Default Behaviors
 
-#### Upgrade Managed CNI Operators
+#### 4.1.7 Upgrade Managed CNI Operators
 
-#### Upgrade CKO in Workload Cluster
+#### 4.1.8 Upgrade CKO in Workload Cluster
 
-#### Upgrade Control Cluster
+#### 4.1.9 Upgrade Control Cluster
 
-### API Reference
+### 4.2 API Reference
 
-### Sample Configuration
+### 4.3 Sample Configuration
 
-## Observability & Diagnostics
+## 5. Observability & Diagnostics
 
-### Tracking CKO Status
+### 5.1 Tracking CKO Status
 
-### Tracking Workload Clusters
+### 5.2 Tracking Workload Clusters
 
-#### Connectivity Checker
+#### 5.2.1 Connectivity Checker
 
-## Troubleshooting
+## 6. Troubleshooting
 
-## Contributing
+## 7. Contributing
 
-### Repositories
+### 7.1 Repositories
 
-### Contributing to CKO
+### 7.2 Contributing to CKO
 
 [Developer Guide](docs/dev-guide/dev-and-contribute.md)
