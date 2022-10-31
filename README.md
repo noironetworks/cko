@@ -130,7 +130,13 @@ helm install \
 ```
 
 #### 3.1.3 Create a config file for Helm install
-CKO follows the Gitops model for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below (you can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github).
+CKO follows the Gitops model for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below. The configuration below assumes that the Git repository is hosted in Github. You can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github.
+
+``` bash
+
+echo <GITHUB PAT> | base64
+<BASE64 ENCODED GITHUB PAT>
+```
 
 ``` bash
 
@@ -153,7 +159,7 @@ gitConfig:
     git_repo: https://github.com/<ORG>/<REPO>
     git_dir: <DIR>
     git_branch: <BRANCH NAME>
-    git_token: <BASE64 ENCODED GIT PAT>
+    git_token: <BASE64 ENCODED GITHUB PAT>
     git_user: <GIT USER>
     git_email: <GIT EMAIL>
 
@@ -188,7 +194,7 @@ kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=repo=https://github.com/<ORG>/<REPO> \
 --from-literal=dir=<DIR> \
 --from-literal=branch=<BRANCH NAME> \
---from-literal=token=<GIT PAT> \
+--from-literal=token=<GITHUB PAT> \
 --from-literal=user=<GIT USER> \
 --from-literal=email=<GIT EMAIL> \
 --from-literal=systemid=<SYSTEM ID> \
