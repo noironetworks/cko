@@ -42,13 +42,66 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 ## 1. Introduction
 
+The [CNCF Cloud Native Landscape] (https://landscape.cncf.io/?grouping=category) demonstrates the rich but rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
+
+CKO aims to address this complexity and reduce the operational overhead by:
+Providing resource management across network resources and automating the composition of networks and services
+Providing observability by correlating between clusters and infrastructure, by centralized data collection and eventing, and by health check and reporting at global level
+Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
+Providing multi-cluster security by federating identity across domains
+
+
 ![Control and Workload Cluster](docs/user-guide/diagrams/control-and-workload-clusters.drawio.png)
 
 ## 2. Features
+This release includes the following features:
+
+* An Extensible Framework for CNI Lifecycle Management and Reporting
+* Centralized Management comprising of
+    * Network Data Model
+    * CNI Asset Generation
+    * CNI Upgrades
+    * Connectivity Reporting
 
 ### 2.1 Supported Integrations
+This release has support for:
 
-### 2.2 Under Development
+* ACI Fabric 5.2
+* ACI-CNI 5.2.3.4
+* Calico CNI with Tigera Operator 3.23
+* OCP 4.10
+* Kubernetes 1.22 or later
+
+### 2.2 Roadmap Items Under Development
+Support for Network Infrastructure:
+* Cisco Nexus Standalone (NDFC)
+* AWS EKS
+
+Support for CNI:
+* AWS VPC
+* Cilium
+* OpenShift SDN
+
+Support for Distro:
+* Rancher
+
+Support for Service Mesh:
+* Cisco Calisti
+* Istio
+* OpenShift Service Mesh
+
+Support for Loadbalancer:
+* MetalLB
+
+Support for Ingress:
+* NGINX
+
+Support for Monitoring:
+* Prometheus
+* Open Telemetry
+
+Support for DPU:
+* Nvidia Bluefield
 
 ## 3. Deploying CKO
 
@@ -93,10 +146,10 @@ fabricManagerImage:
 
 gitConfig:
   cko_git_config: |-
-    git_repo: https://github.com/<OWNER>/<REPO>
+    git_repo: https://github.com/<ORG>/<REPO>
     git_dir: <DIR>
     git_branch: <BRANCH NAME>
-    git_token: <GIT PAT>
+    git_token: <BASE64 ENCODED GIT PAT>
     git_user: <GIT USER>
     git_email: <GIT EMAIL>
 
@@ -128,7 +181,7 @@ Provide the same Git repository details as those in the Control Cluster.
 ```bash
 kubectl create ns netop-manager-system
 kubectl create secret generic cko-config -n netop-manager-system \
---from-literal=repo=https://github.com/<OWNER>/<REPO> \
+--from-literal=repo=https://github.com/<ORG>/<REPO> \
 --from-literal=dir=<DIR> \
 --from-literal=branch=<BRANCH NAME> \
 --from-literal=token=<GIT PAT> \
@@ -138,6 +191,13 @@ kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=http_proxy=<HTTP_PROXY> \
 --from-literal=https_proxy=<HTTPS_PROXY> \
 --from-literal=no_proxy=<NO_PROXY>
+kubectl create secret generic repo-demo-cluster-manifests -n netop-manager-system \
+--from-literal=url=https://github.com/<ORG>/<REPO> \
+--from-literal=type=git  \
+--from-literal=password=<GIT PAT> \
+--from-literal=username=<GIT USER> \
+--from-literal=proxy=<HTTP_PROXY>
+kubectl label secret repo-demo-cluster-manifests -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
 ```
 
 #### 3.2.2 Deploy Manifests
