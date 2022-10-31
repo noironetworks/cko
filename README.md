@@ -1,5 +1,5 @@
 # CKO
-Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubernetes clusters and more
+Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubernetes clusters and more.
 
 # Table of Contents
 
@@ -78,6 +78,19 @@ CKO follows the Gitops model for syncing configuration between Control and Workl
 ``` bash
 
 cat > my_values.yaml << EOF
+image:
+  repository: quay.io/ckodev/netop-org-manager
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.9.0.d04f56f"
+
+## -- Specifies image details for netop-farbic-manager
+fabricManagerImage:
+  repository: quay.io/ckodev/netop-fabric-manager
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.9.0.d04f56f"
+
 gitConfig:
   cko_git_config: |-
     git_repo: https://github.com/<OWNER>/<REPO>
@@ -172,7 +185,7 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 
 ### 4.2 API Reference
 
-### 4.3 Sample Configuration
+### 4.3 Sample Configurations
 
 ## 5. Observability & Diagnostics
 
