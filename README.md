@@ -126,6 +126,7 @@ helm install netop-org-manager cko/netop-org-manager -n netop-org-manager --crea
 Provide the same Git repository details as those in the Control Cluster.
 
 ```bash
+kubectl create ns netop-manager-system
 kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=repo=https://github.com/<OWNER>/<REPO> \
 --from-literal=dir=<DIR> \
