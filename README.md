@@ -32,7 +32,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [4.2 API Reference](#42-api-reference)
   - [4.3 Sample Configuration](#43-sample-configuration)
 - [5. Observability & Diagnostics](#5-observability--diagnostics)
-  - [5.1 Tracking CKO Status](#51-tracking-cko-status)
+  - [5.1 Tracking Control Cluster Status](#51-tracking-control-cluster-status)
   - [5.2 Tracking Workload Clusters](#52-tracking-workload-clusters)
     - [5.2.1 Connectivity Checker](#521-connectivity-checker)
 - [6. Troubleshooting](#6-troubleshooting)
@@ -42,14 +42,18 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 ## 1. Introduction
 
-The [CNCF Cloud Native Landscape] (https://landscape.cncf.io/?grouping=category) demonstrates the rich but rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
+The [CNCF Cloud Native Landscape](https://landscape.cncf.io/?grouping=category) demonstrates the rich but rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
 
 CKO aims to address this complexity and reduce the operational overhead by:
-Providing resource management across network resources and automating the composition of networks and services
-Providing observability by correlating between clusters and infrastructure, by centralized data collection and eventing, and by health check and reporting at global level
-Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
-Providing multi-cluster security by federating identity across domains
+* Providing resource management across network resources and automating the composition of networks and services
+* Providing observability by correlating between clusters and infrastructure, by centralized data collection and eventing, and by health check and reporting at global level
+* Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
+* Providing multi-cluster security by federating identity across domains
 
+The diagram below illustrates a CKO deployment comprising of:
+* A centralized "Org Operator" for identity and resource management 
+* One or more "Fabric Operators" for network infrastructure automation and kubernetes manifest generation
+* "Per Cluster Operators" for managing the lifecycle of network components in the Workload Cluster
 
 ![Control and Workload Cluster](docs/user-guide/diagrams/control-and-workload-clusters.drawio.png)
 
@@ -250,7 +254,7 @@ kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests
 
 ## 5. Observability & Diagnostics
 
-### 5.1 Tracking CKO Status
+### 5.1 Tracking Control Cluster Status
 
 ### 5.2 Tracking Workload Clusters
 
