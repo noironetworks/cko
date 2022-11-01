@@ -156,7 +156,7 @@ fabricManagerImage:
 
 gitConfig:
   cko_git_config: |-
-    git_repo: https://github.com/<ORG>/<REPO>
+    git_repo: github.com/<ORG>/<REPO>
     git_dir: <DIR>
     git_branch: <BRANCH NAME>
     git_token: <BASE64 ENCODED GITHUB PAT>
@@ -201,13 +201,13 @@ kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=http_proxy=<HTTP_PROXY> \
 --from-literal=https_proxy=<HTTPS_PROXY> \
 --from-literal=no_proxy=<NO_PROXY>
-kubectl create secret generic repo-demo-cluster-manifests -n netop-manager-system \
+kubectl create secret generic cko-argo -n netop-manager-system \
 --from-literal=url=https://github.com/<ORG>/<REPO> \
 --from-literal=type=git  \
 --from-literal=password=<GIT PAT> \
 --from-literal=username=<GIT USER> \
 --from-literal=proxy=<HTTP_PROXY>
-kubectl label secret repo-demo-cluster-manifests -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
+kubectl label secret cko-argo -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
 ```
 
 #### 3.2.2 Deploy Manifests
