@@ -9,20 +9,9 @@
 Package v1alpha1 contains API Schema definitions for the netop.mgr v1alpha1 API group
 
 ### Resource Types
-- [ClusterGroupProfile](#clustergroupprofile)
-- [ClusterGroupProfileList](#clustergroupprofilelist)
-- [ClusterInfo](#clusterinfo)
-- [ClusterInfoList](#clusterinfolist)
-- [ClusterOutput](#clusteroutput)
-- [ClusterOutputList](#clusteroutputlist)
-- [ClusterProfile](#clusterprofile)
-- [ClusterProfileList](#clusterprofilelist)
-- [ClusterStatus](#clusterstatus)
-- [ClusterStatusList](#clusterstatuslist)
 - [FabricInfra](#fabricinfra)
-- [FabricInfraList](#fabricinfralist)
-- [ServiceMeshTopology](#servicemeshtopology)
-- [ServiceMeshTopologyList](#servicemeshtopologylist)
+- [ClusterProfile](#clusterprofile)
+- [ClusterGroupProfile](#clustergroupprofile)
 
 
 
@@ -33,7 +22,6 @@ Package v1alpha1 contains API Schema definitions for the netop.mgr v1alpha1 API 
 
 
 _Appears in:_
-- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
@@ -55,7 +43,6 @@ _Appears in:_
 
 
 _Appears in:_
-- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
@@ -161,21 +148,6 @@ _Appears in:_
 | `password` _string_ | Key name that contains password |
 
 
-#### ArtifactsSpec
-
-
-
-
-
-_Appears in:_
-- [ClusterOutputConfigSpec](#clusteroutputconfigspec)
-
-| Field | Description |
-| --- | --- |
-| `deployment` _string_ |  |
-| `tar` _string_ |  |
-
-
 #### AvailableSpec
 
 
@@ -231,7 +203,6 @@ _Appears in:_
 
 
 _Appears in:_
-- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
@@ -521,53 +492,6 @@ _Appears in:_
 | `fabricinfra` _[FabricContext](#fabriccontext)_ |  |
 | `distro` _[DistroSpec](#distrospec)_ |  |
 | `operator_config` _[OperatorSpec](#operatorspec)_ |  |
-
-
-
-
-#### ClusterStatus
-
-
-
-ClusterStatus is the Schema for the clusterstatuses API
-
-_Appears in:_
-- [ClusterStatusList](#clusterstatuslist)
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ClusterStatus`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `spec` _[ClusterStatusSpec](#clusterstatusspec)_ |  |
-
-
-#### ClusterStatusList
-
-
-
-ClusterStatusList contains a list of ClusterStatus
-
-
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ClusterStatusList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `items` _[ClusterStatus](#clusterstatus) array_ |  |
-
-
-#### ClusterStatusSpec
-
-
-
-ClusterStatusSpec defines the desired state of ClusterStatus
-
-_Appears in:_
-- [ClusterStatus](#clusterstatus)
-
-
 
 
 
@@ -1224,74 +1148,6 @@ _Appears in:_
 | `image_prefix` _string_ |  |
 | `image_pull_secret` _string_ |  |
 | `network_operator_version` _string_ |  |
-
-
-#### ServiceMeshSpec
-
-
-
-
-
-_Appears in:_
-- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
-- [ConfigOverridesSpec](#configoverridesspec)
-
-| Field | Description |
-| --- | --- |
-| `name` _string_ |  |
-| `mesh_id` _string_ |  |
-| `network` _string_ |  |
-| `role` _string_ |  |
-| `kubeconfig` _string_ |  |
-
-
-#### ServiceMeshTopology
-
-
-
-ServiceMeshTopology is the Schema for the servicemeshtopologies API
-
-_Appears in:_
-- [ServiceMeshTopologyList](#servicemeshtopologylist)
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ServiceMeshTopology`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `spec` _[ServiceMeshTopologySpec](#servicemeshtopologyspec)_ |  |
-
-
-#### ServiceMeshTopologyList
-
-
-
-ServiceMeshTopologyList contains a list of ServiceMeshTopology
-
-
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ServiceMeshTopologyList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `items` _[ServiceMeshTopology](#servicemeshtopology) array_ |  |
-
-
-#### ServiceMeshTopologySpec
-
-
-
-ServiceMeshTopologySpec defines the desired state of ServiceMeshTopology
-
-_Appears in:_
-- [ServiceMeshTopology](#servicemeshtopology)
-
-| Field | Description |
-| --- | --- |
-| `clusters` _string array_ |  |
-
-
 
 
 #### SnatSpec
