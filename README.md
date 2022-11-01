@@ -255,12 +255,12 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 #### 4.1.9 Upgrade Control Cluster
 
 ### 4.2 API Reference
-[User API](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/api_docs.md_)
-[Updatable Properties](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/property_update_docs.md)
+* [User API](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/api_docs.md_)
+* [Updatable Properties](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/property_update_docs.md)
 
 ### 4.3 Sample Configurations
-[ACI-CNI](https://github.com/noironetworks/cko/tree/main/config/samples/aci-cni)
-[Calico](https://github.com/noironetworks/cko/tree/main/config/samples/calico)
+* [ACI-CNI](https://github.com/noironetworks/cko/tree/main/config/samples/aci-cni)
+* [Calico](https://github.com/noironetworks/cko/tree/main/config/samples/calico)
 
 ## 5. Observability & Diagnostics
 
