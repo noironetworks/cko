@@ -42,13 +42,26 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 ## 1. Introduction
 
-The [CNCF Cloud Native Landscape](https://landscape.cncf.io/?grouping=category) illustrates the rich and rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
+The [CNCF Cloud Native Landscape](https://landscape.cncf.io/?grouping=category) illustrates the rich and rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple Kubernetes clusters.
 
-CKO aims to address this complexity and reduce the operational overhead by:
-* Providing resource management across network resources and automating the composition of networks and services
-* Providing observability by correlating between clusters and infrastructure, by centralized data collection and eventing, and by health check and reporting at global level
-* Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
-* Providing multi-cluster security by federating identity across domains
+CKO aims to alleviate this complexity and reduce the operational overhead by:
+* Automation - Providing resource management across network resources and automating the composition of networks and services
+* Observability - Providing observability by correlating between clusters and infrastructure, by centralized data collection and eventing, and by health check and reporting at global level
+* Operations - Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
+* Security - Providing multi-cluster security by federating identity across domains
+
+CKO achieves this by defining simple abstractions to meet the needs of he following persona:
+* Kubernetes Admin - responsible for managing the cluster
+* Cloud Admin - responsible for the coordinating the infrastructure needs of a cluster
+* Network Admin - responsible for the network infrastructure
+
+These abstractions are modeled to capture the user's intent and then consistently apply it across the infrastructure components:
+* ClusterProfle - defined by the Kubernetes Admin to express the network needs for the cluster they intend to manage
+* ClusterGroupProfile - defined by the Cloud Admin to match the networking needs of all matching clusters with network and other infrastructure
+* ClusterNetworkProfile - defined by the Cloud Admin to match the specific needs of one cluster
+* FabricInfra - defined by the Network Admin to model each discrete physical or virtual network infrastructure that provides pod, node and external networking capabilities to the cluster
+
+The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible enough to apply to a group of clusters which can managed as a whole, or create individual snowflakes. 
 
 The diagram below illustrates a typical CKO deployment comprising of one Control Cluster and one or more Workload Clusters with the following CKO components:
 * A centralized "Org Operator" for identity and resource management 
