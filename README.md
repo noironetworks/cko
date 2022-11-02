@@ -325,8 +325,8 @@ Create ClusterNetworkProfile with common properties like CNI, Distro etc, set la
 Create ClusterProfile for cluster, set ClusterNetworkProfileSelector to match ClusterNetworkProfile's labels.
 
 #### 4.1.6 Customizing Default Behaviors
-ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
-ConfigMap for FabricInfra global default settings: defaults-global-fabricinfra.yaml
+* ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
+* ConfigMap for FabricInfra global default settings: defaults-global-fabricinfra.yaml
 
 #### 4.1.7 Upgrade Managed CNI Operators
 Update CNI version in ClusterProfile,
