@@ -55,7 +55,7 @@ CKO achieves this by defining simple abstractions to meet the needs of he follow
 * Cloud Admin - responsible for the coordinating the infrastructure needs of a cluster
 * Network Admin - responsible for the network infrastructure
 
-These abstractions are modeled to capture the user's intent and then consistently apply it across the infrastructure components:
+These abstractions are modeled to capture the user's intent and then consistently apply it across the infrastructure components. The abstractions are:
 * ClusterProfle - defined by the Kubernetes Admin to express the network needs for the cluster they intend to manage
 * ClusterGroupProfile - defined by the Cloud Admin to match the networking needs of all matching clusters with network and other infrastructure
 * ClusterNetworkProfile - defined by the Cloud Admin to match the specific needs of one cluster
@@ -236,34 +236,123 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 ### 4.1 Workflows
 
 #### 4.1.1 Fabric Onboarding
+For CKO to manage a Cluster's networking, its network infrastructure has to be known to CKO. This is done by defining a FabricInfra CR. The FabricInfra CR establishes the identity of the Fabric, and allows the Network Admin to specify the set of resources available to be consumed on that fabric.
+
+[CRD](docs/control-cluster/api_docs.md#fabricinfra)
+[Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
 #### 4.1.2 Brownfield Clusters
+Existing clusters with a functional CNI can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
 
 ##### 4.1.2.1 Unmanaged CNI
+Network Admin - Create fabricinfra.yaml to onboard the fabric.
+ 
+On the workload cluster, use acc-provision normal mode to install aci-cni.
+Install netop-manager manifest and create git secret cko-config.
+ 
+ 
+Following notifications are required from workload cluster to initiate cluster profile creation.
+Observedops:
+Type should be aci-cni to initiate the process.
+ 
+Canary Installer:
+(This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster)
+Type should be aci-cni to initiate the process.
+ 
+Configmap:
+Acc-provision config:
+All of the fields here are important.
+ 
+Aci-operator-config :
+Flavor field is important here to reconstruct acc-provision input.
+ 
+Samples for all these are here:
+https://github.com/networkoperator/demo-cluster-manifests/tree/notif_test/workload/status/bm2acicni
+ 
+ 
+Once all these notifications are available, cluster profile will be created.
+Look for the objects
+auto-<clustername> - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
+auto-<clustername> - [ClusterNetworkProfile] (config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
+ 
 
 ##### 4.1.2.2 Managed CNI
+Change the following in the ClusterProfile:
+
+```bash
+...
+  operator_config:
+    mode: unmanaged
+...
+```
 
 #### 4.1.3 Greenfield Clusters
+Workflow starts in the Control Cluster.
+
+Network Admin - Create fabricinfra.yaml to onboard the fabric.
+
+Create ClusterProfile with CNI choice.
 
 #### 4.1.4 Managing Clusters as a Group
 
+Create ClusterGroupProfile with common properties like CNI, Distro etc, set labels.
+
+Create ClusterProfile per cluster, set ClusterGroupProfileSelector to match ClusterGroupProfile's labels.
+
 #### 4.1.5 Managing Clusters Individually
 
+Create ClusterNetworkProfile with common properties like CNI, Distro etc, set labels.
+
+Create ClusterProfile for cluster, set ClusterNetworkProfileSelector to match ClusterNetworkProfile's labels.
+
 #### 4.1.6 Customizing Default Behaviors
+ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
+ConfigMap for FabricInfra global default settings: defaults-global-fabricinfra.yaml
 
 #### 4.1.7 Upgrade Managed CNI Operators
+Update CNI version in ClusterProfile,
+
+For ACI CNI:
+
+```bash
+...
+           config_overrides:
+                  aci_cni_config:
+                      aci_config:
+                      target_version: <>
+                        ...
+```
+
+For Calico CNI:
+
+```bash
+...
+           config_overrides:
+                  calico_cni_config:
+                      aci_config:
+                      target_version: <>
+                        ...
+```
 
 #### 4.1.8 Upgrade CKO in Workload Cluster
+Update CKO version in ClusterProfile
 
 #### 4.1.9 Upgrade Control Cluster
 
+```bash
+	helm upgrade --install cko deploy/charts/netops-org-manager -n netop-manager --create-namespace \
+	--set image.tag=${VERSION} --set image.repository=${IMAGE_TAG_BASE} \
+	--set fabricManagerImage.repository=quay.io/ckodev/netop-fabric-manager \
+	--set image.pullPolicy=IfNotPresent
+```
+
 ### 4.2 API Reference
-* [User API](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/api_docs.md_)
-* [Editable Properties](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/property_update_docs.md)
+* [User API](docs/control-cluster/api_docs.md_)
+* [Editable Properties](docs/control-cluster/property_update_docs.md)
 
 ### 4.3 Sample Configurations
-* [ACI-CNI](https://github.com/noironetworks/cko/tree/main/config/samples/aci-cni)
-* [Calico](https://github.com/noironetworks/cko/tree/main/config/samples/calico)
+* [ACI-CNI](config/samples/aci-cni)
+* [Calico](config/samples/calico)
 
 ## 5. Observability & Diagnostics
 
@@ -278,6 +367,17 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 ## 7. Contributing
 
 ### 7.1 Repositories
+* Org Operator: [netop-org-manager](https://github.com/noironetworks/netop-org-manager)
+
+* Fabric Operator: [netop-fabric-manager](https://github.com/noironetworks/netop-fabric-manager)
+
+* Workload Cluster Operator: [netop-manager](https://github.com/noironetworks/netop-manager)
+
+* Notification Types: [netop-types](https://github.com/noironetworks/netop-types)
+
+* Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision)
+
+* Connectivity Checker: [nettools] (https://github.com/noironetworks/nettools)
 
 ### 7.2 Contributing to CKO
 
