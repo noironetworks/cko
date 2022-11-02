@@ -42,7 +42,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 
 ## 1. Introduction
 
-The [CNCF Cloud Native Landscape](https://landscape.cncf.io/?grouping=category) demonstrates the rich but rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
+The [CNCF Cloud Native Landscape](https://landscape.cncf.io/?grouping=category) illustrates the rich and rapidly evolving set of projects and compnents in the Cloud Native Networking domain. Using these components requires installation and operational knowledge of each one of those. It also leaves the burden on the user to harmonize the configuration across the networking layers and components to ensure that everything works in sync. This gets even more complicated when you consider that most production solutions run applications which are deployed across multiple clusters.
 
 CKO aims to address this complexity and reduce the operational overhead by:
 * Providing resource management across network resources and automating the composition of networks and services
@@ -50,10 +50,12 @@ CKO aims to address this complexity and reduce the operational overhead by:
 * Providing operational benefits via centralized network governance, migration of workloads, and cost optimization across cluster sprawl
 * Providing multi-cluster security by federating identity across domains
 
-The diagram below illustrates a CKO deployment comprising of:
+The diagram below illustrates a typical CKO deployment comprising of one Control Cluster and one or more Workload Clusters with the following CKO components:
 * A centralized "Org Operator" for identity and resource management 
 * One or more "Fabric Operators" for network infrastructure automation and kubernetes manifest generation
 * "Per Cluster Operators" for managing the lifecycle of network components in the Workload Cluster
+
+The Workload Cluster runs the user's applications. The lifecycle of all the clusters is managed by the user; CKO only requires that specific operators be run in these. The lifecycle of CKO in the Workload Cluster, once deployed, is managed by the Control Cluster.
 
 ![Control and Workload Cluster](docs/user-guide/diagrams/control-and-workload-clusters.drawio.png)
 
@@ -112,7 +114,7 @@ Support for DPU:
 ### 3.1 Control Cluster
 
 #### 3.1.1 Prequisites
-* A functional Kubernetes cluster with reachability to the ACI Fabric. (A single node cluster is adequate.)
+* A functional Kubernetes cluster with reachability to the ACI Fabric that will serve as the Control Cluster. (A single node cluster is adequate.)
 * kubectl
 * Helm
 
@@ -130,7 +132,7 @@ helm install \
 ```
 
 #### 3.1.3 Create a config file for Helm install
-CKO follows the Gitops model for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below. The configuration below assumes that the Git repository is hosted in Github. You can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github.
+CKO follows the [GitOps](https://www.weave.works/technologies/gitops/) model using [Argo CD](https://github.com/argoproj/argo-cd) for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below. The configuration below assumes that the Git repository is hosted in Github. You can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github.
 
 ``` bash
 
@@ -173,6 +175,8 @@ extraEnv:
 
 EOF
 ```
+
+Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD reconciles with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). If quicker synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/).
 
 #### 3.1.4 Deploy using Helm
 
@@ -256,7 +260,7 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 
 ### 4.2 API Reference
 * [User API](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/api_docs.md_)
-* [Updatable Properties](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/property_update_docs.md)
+* [Editable Properties](https://github.com/noironetworks/cko/blob/main/docs/control-cluster/property_update_docs.md)
 
 ### 4.3 Sample Configurations
 * [ACI-CNI](https://github.com/noironetworks/cko/tree/main/config/samples/aci-cni)
