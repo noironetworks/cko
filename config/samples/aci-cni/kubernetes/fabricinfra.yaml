@@ -12,8 +12,6 @@ spec:
     - 10.10.10.10
     secretRef:
       name: apic-credentials
-      username: username
-      password: password
   fabric_type: aci
   infra_vlan: 4093
   mcast_subnets:

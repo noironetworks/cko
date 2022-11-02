@@ -144,7 +144,7 @@ fabricManagerImage:
 
 gitConfig:
   cko_git_config: |-
-    git_repo: github.com/<ORG>/<REPO>
+    git_repo: https://github.com/<ORG>/<REPO>
     git_dir: <DIR>
     git_branch: <BRANCH NAME>
     git_token: <BASE64 ENCODED GITHUB PAT>
