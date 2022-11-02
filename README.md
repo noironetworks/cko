@@ -245,8 +245,8 @@ Start by creating a secret with APIC credentials:
 kubectl create secret -n netop-manager generic apic-credentials --from-literal=username=<ACC_PROVISION_USERNAME> --from-literal=password=<ACC_PROVISION_PASS>
 ```
 Then create the FabricInfra CR:
-[CRD](docs/control-cluster/api_docs.md#fabricinfra)
-[Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
+* [CRD](docs/control-cluster/api_docs.md#fabricinfra)
+* [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
 #### 4.1.2 Brownfield Clusters
 Existing clusters with a functional CNI can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
@@ -384,7 +384,7 @@ Update CKO version in ClusterProfile
 
 * Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision)
 
-* Connectivity Checker: [nettools] (https://github.com/noironetworks/nettools)
+* Connectivity Checker: [nettools](https://github.com/noironetworks/nettools)
 
 ### 7.2 Contributing to CKO
 
