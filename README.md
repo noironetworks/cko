@@ -62,7 +62,7 @@ These abstractions are modeled to capture the user's intent and then consistentl
 * ClusterNetworkProfile - defined by the Cloud Admin to match the specific needs of one cluster
 * FabricInfra - defined by the Network Admin to model each discrete physical or virtual network infrastructure that provides pod, node and external networking capabilities to the cluster
 
-The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible enough to apply to a group of clusters which can managed as a whole, or create individual snowflakes. 
+The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible and can be applied to a group of clusters which can managed as a whole, or create individual snowflakes. 
 
 The diagram below illustrates a typical CKO deployment comprising of one Control Cluster and one or more Workload Clusters with the following CKO components:
 * A centralized "Org Operator" for identity and resource management 
@@ -325,7 +325,7 @@ For ACI CNI:
 ...
            config_overrides:
                   aci_cni_config:
-                      aci_config:
+                      ...
                       target_version: <>
                         ...
 ```
@@ -336,7 +336,7 @@ For Calico CNI:
 ...
            config_overrides:
                   calico_cni_config:
-                      aci_config:
+                      ...
                       target_version: <>
                         ...
 ```
@@ -385,6 +385,8 @@ Update CKO version in ClusterProfile
 * Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision)
 
 * Connectivity Checker: [nettools](https://github.com/noironetworks/nettools)
+
+* System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/commits/cko-mvp-1)
 
 ### 7.2 Contributing to CKO
 
