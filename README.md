@@ -293,6 +293,16 @@ Change the following in the ClusterProfile:
 ...
 ```
 
+to:
+
+
+```bash
+...
+  operator_config:
+    mode: managed
+...
+```
+
 #### 4.1.3 Greenfield Clusters
 Workflow starts in the Control Cluster.
 
@@ -305,6 +315,8 @@ Create ClusterProfile with CNI choice.
 Create ClusterGroupProfile with common properties like CNI, Distro etc, set labels.
 
 Create ClusterProfile per cluster, set ClusterGroupProfileSelector to match ClusterGroupProfile's labels.
+
+Also updates to properties such as CNI management modes (managed versus unmanaged), CKO version, and CNI versions can be done in the ClusterGroupProfile instead of individual clusters.
 
 #### 4.1.5 Managing Clusters Individually
 
@@ -342,7 +354,15 @@ For Calico CNI:
 ```
 
 #### 4.1.8 Upgrade CKO in Workload Cluster
-Update CKO version in ClusterProfile
+Update CKO version in ClusterProfile by changing the following:
+
+```bash
+...
+  operator_config:
+    ...
+    target_version: 0.9.1
+...
+```
 
 #### 4.1.9 Upgrade Control Cluster
 
