@@ -79,37 +79,23 @@ This release has support for:
 * Kubernetes 1.22 or later
 
 ### 2.2 Roadmap Items Under Development
-Support for Network Infrastructure:
-* Cisco Nexus Standalone (NDFC)
-* AWS EKS
+Support for the following technologies and products is being actively pursued:
 
-Support for CNI:
-* AWS VPC
-* Cilium
-* OpenShift SDN
+| Feature       |  Product                                                 |
+|---------------|----------------------------------------------------------|
+| Network Infra | * Cisco Nexus Standalone (NDFC)<br> * AWS EKS            |
+| CNI           | * AWS VPC<br> * Cilium<br> * OpenShift SDN               |
+| Distributions | * Rancher                                                |
+| Service Mesh  | * Cisco Calisti<br> * Istio<br> * OpenShift Service Mesh |
+| Loadbalancer  | * MetalLB                                                |
+| Ingress       | * NGINX                                                  |
+| Monitoring    | * Prometheus<br> * Open Telemetry                        |
+| DPU           | * Nvidia Bluefield                                       |
 
-Support for Distro:
-* Rancher
-
-Support for Service Mesh:
-* Cisco Calisti
-* Istio
-* OpenShift Service Mesh
-
-Support for Loadbalancer:
-* MetalLB
-
-Support for Ingress:
-* NGINX
-
-Support for Monitoring:
-* Prometheus
-* Open Telemetry
-
-Support for DPU:
-* Nvidia Bluefield
+The above list is not comprehensive and we are constantly evaluating and adding new features for support based on user demand.
 
 ## 3. Deploying CKO
+CKO requires one Control Cluster to be deployed with the CKO operators before any Workload Clusters can be managed by CKO. Existing Workload Clusters with a functioning CNI can be imported into CKO.
 
 ### 3.1 Control Cluster
 
