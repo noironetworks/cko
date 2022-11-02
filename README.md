@@ -39,6 +39,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 - [7. Contributing](#7-contributing)
   - [7.1 Repositories](#71-repositories)
   - [7.2 Contributing to CKO](#72-contributing-to-cko)
+  - [7.3 Experimenting with Control Cluster](#73-experimenting-with-control-cluster)
 
 ## 1. Introduction
 
