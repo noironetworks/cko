@@ -238,6 +238,12 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 #### 4.1.1 Fabric Onboarding
 For CKO to manage a Cluster's networking, its network infrastructure has to be known to CKO. This is done by defining a FabricInfra CR. The FabricInfra CR establishes the identity of the Fabric, and allows the Network Admin to specify the set of resources available to be consumed on that fabric.
 
+Start by creating a secret with APIC credentials:
+
+```bash
+kubectl create secret -n netop-manager generic apic-credentials --from-literal=username=<ACC_PROVISION_USERNAME> --from-literal=password=<ACC_PROVISION_PASS>
+```
+Then create the FabricInfra CR:
 [CRD](docs/control-cluster/api_docs.md#fabricinfra)
 [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
@@ -382,3 +388,21 @@ Update CKO version in ClusterProfile
 ### 7.2 Contributing to CKO
 
 [Developer Guide](docs/dev-guide/dev-and-contribute.md)
+
+### 7.3 Experimenting with Control Cluster
+CKO Control Cluster can be deployed in a disconnected mode from the fabric. Edit defaults-global-fabricinfra ConfigMap in netop-org-deployment.yaml with
+
+```bash
+provision_fabric: "false"
+```
+
+This can also be provided as an override in the fabricinfra CR as "spec.provision_fabric: false" for disabling per cluster provisioning.
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: defaults-global-fabricinfra
+  namespace: netop-manager
+data:
+  provision_fabric: "false"
+```
