@@ -579,14 +579,9 @@ It collects outputs from various fields like events and logs and displays in sin
 [Developer Guide](docs/dev-guide/dev-and-contribute.md)
 
 ### 7.3 Experimenting with Control Cluster
-CKO Control Cluster can be deployed in a disconnected mode from the fabric. Edit defaults-global-fabricinfra ConfigMap in netop-org-deployment.yaml with
+CKO Control Cluster can be deployed in a disconnected mode from all fabrics. Edit defaults-global-fabricinfra ConfigMap:
 
 ```bash
-provision_fabric: "false"
-```
-
-This can also be provided as an override in the fabricinfra CR as "spec.provision_fabric: false" for disabling per cluster provisioning.
-```
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -594,4 +589,21 @@ metadata:
   namespace: netop-manager
 data:
   provision_fabric: "false"
+```
+
+This can also be set per fabric in the fabricinfra CR as "spec.provision_fabric: false":
+
+```bash
+apiVersion: netop.mgr/v1alpha1
+kind: FabricInfra
+metadata:
+  name: k8s-bm-2
+  namespace: netop-manager
+  labels:
+    fabric: on-prem-dev-infra
+    site: bldg-15-lab
+spec:
+  ...
+  provision_fabric: "false"
+  ...
 ```
