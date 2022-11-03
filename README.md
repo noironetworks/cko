@@ -32,9 +32,8 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [4.2 API Reference](#42-api-reference)
   - [4.3 Sample Configuration](#43-sample-configuration)
 - [5. Observability & Diagnostics](#5-observability--diagnostics)
-  - [5.1 Tracking Control Cluster Status](#51-tracking-control-cluster-status)
-  - [5.2 Tracking Workload Clusters](#52-tracking-workload-clusters)
-    - [5.2.1 Connectivity Checker](#521-connectivity-checker)
+  - [5.1 Diagnostics on the Control Cluster](#51-diagnostics-on-the-control-cluster)
+  - [5.2 Diagnosticson on the Workload Clusters](#52-diagnostics-on-the-workload-cluster)
 - [6. Troubleshooting](#6-troubleshooting)
 - [7. Contributing](#7-contributing)
   - [7.1 Repositories](#71-repositories)
@@ -363,27 +362,29 @@ Update CKO version in ClusterProfile
 
 ## 5. Observability & Diagnostics
 
-CKO has built-in diagnostic tools that provides insights in to the state of network configuration on both controle and workload cluster sides. 
+CKO has built-in diagnostic tools that provides insights in to the state of network configuration on both control and workload cluster sides. 
 
-### 5.1 Tracking Control Cluster Status
+### 5.1 Diagnostics on the Control Cluster
 
 #### 5.1.1 Workload cluster configuration state on Control Cluster:
 
-After creating new FabricInfra Custom Resource for new Data Center fabric, the new pod will be created with name: *netop-fabric-manager-<FABRIC_NAME>-<RANDOM_NUMBER>* in the *netop-manager* namespace. 
+After creating new FabricInfra Custom Resource for new Data Center Fabric, the new POD will be created with a name: *netop-fabric-manager-<FABRIC_NAME>-<RANDOM_NUMBER>* in the *netop-manager* namespace. 
 
-Verify whether pod has been created using following command:
+Verify whether the POD has been created, using following command:
 
 ```
 kubectl get pods -n netop-manager
 ```
 
-After applying ClusterGroupProfile, ClusterProfile Custom Resources and optionally Config_Map for ClusterNetworkProfile, the workload cluster's network configuration is represented as a Custom Resource *clusterinfoes.netop.mgr*. Note this is namespaced resouce, which will be created in the namespace you have used during creation of control cluster. Use following command to verify network configuration for workload cluster:
+After applying ClusterGroupProfile, ClusterProfile Custom Resources (CR) and optionally Config_Map for ClusterNetworkProfile, the workload cluster's network configuration is represented as a Custom Resource *clusterinfoes.netop.mgr* in the Control Cluster. 
+
+*Note* this is namespaced resouce, which will be created in the namespace you specified during creation of control cluster. Use following command to verify network configuration for workload cluster:
 
 ```
 kubectl describe clusterinfoes.netop.mgr -n netop-manager <WORKLOAD_CLUSTER_NAME> 
 ```
 
-In addition, ClusterProfile Custom Resource should be populated with the network details in the *.status* field. Artifacts are picked up from FabricInfra or ClusterNetworkProfile (Config-map). In addition, the *.status.deeployment_script* field consist of the links to the Git repository which contains configuration files pushed to the repository. Those files will be later used to deploy network configuration to the workload cluster.
+In addition, ClusterProfile Custom Resource (CR) should be populated with the network details in the *.status* field. Artifacts are picked up from the FabricInfra or ClusterNetworkProfile (Config_Map). In addition, the *.status.deployment_script* field of the FabricInfra CR, consist of the URL links to the specific files pushed to the Git repository. Those files will be later used to deploy network configuration to the workload cluster.
 
 #### 5.1.2 Verify network resources used from the common pools:
 
@@ -395,7 +396,7 @@ kubectl describe fabricinfras.netop.mgr -n netop-manager <FABRIC_INFRA_NAME>
 
 #### 5.1.3 Verification of connectivity to Git
 
-Configuration of cluster is packaged in to following files and pushed to the Git repository:
+Configuration of the workload cluster is packaged in to following files and pushed to the Git repository:
 The folder structure is the following:
 
 ```
@@ -413,14 +414,15 @@ The folder structure is the following:
 
 After successfully creation of the workload cluster network configuration in the Control Cluster, those files will be pushed to the Git repository. New folder with the name of the workload cluster will be created.
 
-### 5.2 Tracking Workload Clusters
+
+### 5.2 Diagnostics on the Workload Cluster
 
 
 #### 5.2.1 Verify CNI installation
 
 Regardless of the CNI installed, verify that all PODs get IP address and are in the Running or Completed state.
 
-**Note**, that some pods running in the host network namespace, and share node IP addresses - those will be running even without CNI installed. 
+**Note**, that some pods running in the host network namespace and share node IP addresses - those will be running even without CNI installed. 
 
 
 #### 5.2.2 View summary of CNI network configuration of Worlkoad Cluster
