@@ -347,7 +347,60 @@ The BGP configuration for the fabric can be specified as follows:
 
 The specification of the bgp section is required when the fabric is intended to be used for the Calico CNI, its optional if only the ACI-CNI is intended to be deployed.
 
-All avaliable and allocated resource are refelected in the status field of the FabricInfra.
+All avaliable and allocated resource are refelected in the status field of the FabricInfra as shown in the example below:
+
+```bash
+status:
+  allocated:
+  - cluster_profile: bm2acicni
+    context:
+      aep: bm-srvrs-aep
+      l3out:
+        external_networks:
+        - sauto_l3out-1_epg
+        name: sauto_l3out-1
+      vrf:
+        name: sauto_l3out-1_vrf
+        tenant: common
+    external_subnets:
+    - 10.3.0.1/16
+    - 10.4.0.1/16
+    internal_subnets:
+    - 1.100.101.1/24
+    - 10.6.0.1/16
+    - 10.5.0.1/16
+    mcast_subnets:
+    - 225.114.0.0/16
+    vlans:
+    - 101
+    - 102
+  available:
+    contexts:
+      context-2:
+        aep: bm-srvrs-calico-aep
+        l3out:
+          external_networks:
+          - sauto_l3out-3_epg
+          name: sauto_l3out-3
+        vrf:
+          name: sauto_l3out-3_vrf
+          tenant: common
+    external_subnets:
+    - 20.3.0.1/16
+    - 20.4.0.1/16
+    internal_subnets:
+    - 1.100.101.1/16
+    - 2.100.101.1/16
+    - 20.2.0.1/16
+    - 20.5.0.1/16
+    mcast_subnets:
+    - 225.115.0.0/16
+    remote_as_numbers:
+    - 64512
+    vlans:
+    - 103
+    - 104
+```
 
 Note: Subnet, VLAN and context resources do not need to be explicitly defined in the FabricInfra spec for imported clusters. Since these resources are already in use on the fabric, CKO will learn them at the time of importing the cluster, and automatically reserve those resources in the FabricInfra. These resources will however not be release to the available pool when the cluster is deleted.
 
