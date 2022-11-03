@@ -464,11 +464,81 @@ to:
 ```
 
 #### 4.1.3 Greenfield Clusters
-Workflow starts in the Control Cluster.
+Pre-requisite: The network admin has on-boarded the fabric by creating a FabricInfra CR.
 
-Network Admin - Create fabricinfra.yaml to onboard the fabric.
+Unlike in the brownfield case, this workflow starts in the Control Cluster.
 
-Create ClusterProfile with CNI choice.
+The user creates a simple ClusterProfile with CNI choice.
+
+For ACI-CNI:
+```bash
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterProfile
+metadata:
+  name: <cluster-name>
+  namespace: netop-manager
+spec:
+  cni: aci
+```
+
+For Calic-CNI:
+```bash
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterProfile
+metadata:
+  name: <cluster-name>
+  namespace: netop-manager
+spec:
+  cni: calico
+```
+
+This will result in a choice of an available FabricInfra and the allocation of relevant resource on that fabric. On success, the ClusterProfile status will reflect the allocated resources such that it can be used in the cluster installation. For example:
+
+```bash
+...
+status:
+  aci_cni_config:
+    version: 5.2.3.4
+  cluster_network_profile_name: bm2acicni
+  context:
+    aep: bm-srvrs-aep
+    l3out:
+      external_networks:
+      - sauto_l3out-1_epg
+      name: sauto_l3out-1
+    vrf:
+      name: sauto_l3out-1_vrf
+      tenant: common
+  external_subnets:
+  - 10.3.0.1/16
+  - 10.4.0.1/16
+  fabricinfra:
+    context: context-1
+    name: k8s-bm-2
+  internal_subnets:
+  - 1.100.101.1/24
+  - 10.6.0.1/16
+  - 10.5.0.1/16
+  mcast_subnets:
+  - 225.114.0.0/16
+  node_subnet: 1.100.101.1/24
+  node_vlan: 101
+  operator_config:
+    mode: unmanaged
+    version: 0.8.0
+  pod_subnet: 10.6.0.1/16
+  ready: true
+  vlans:
+  - 101
+  - 102
+  workload_cluster_manifest_locations:
+  - 'argo: https://github.com/networkoperator/ckogitrepo/tree/test/workload/argo/bm2acicni'
+  - 'operator: https://github.com/networkoperator/ckogitrepo/tree/test/workload/config/bm2acicni' 
+```
+
+The complete API spec for the FabricInfra can be found here: [CRD](docs/control-cluster/api_docs.md#clusterprofile)
+
+An exmaple of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
 
 #### 4.1.4 Managing Clusters as a Group
 
