@@ -213,6 +213,8 @@ kubectl create secret generic cko-argo -n netop-manager-system \
 kubectl label secret cko-argo -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
 ```
 
+For ACI-CNI, in case if importing a cluster which has a functioning CNI, the system-id is corresponds to the one mentioned in the acc-provision input file. For all other cases, you can chose a name to assign an identity to this cluster.
+
 #### 3.2.2 Deploy Manifests
 
 For OpenShift Cluster:
@@ -290,7 +292,7 @@ At least four internal subnets (for pod, node and services networks), one multic
 
 Note: The minimum requirements vary across the deployment scenarios and supported CNIs. Not all the resources dictated by the minimum requriements will be used. The optimization is underway to validate the minimum requirements for each of these cases separately and will relax this minimum requirements in an uppcoming release.
 
-CKO will automatically pick available resources from the 
+CKO will automatically pick available resources from resource pools. Resources are picked in round-robin fashion. CKO currently does not partition the subnets, so each subnet specified in the resource pool is treated as an indivisible pool. If smaller subnets are desired, they should be listed as individual subnets.
 
 The kubernetes_node-to-fabric and fabric-to-external connectivity on each fabric is encapsulated in the context property of the FabricInfra. For example in the case of the ACI fabric, the following example shows the context and its constituent properties:
 
@@ -409,41 +411,27 @@ The complete API spec for the FabricInfra can be found here: [CRD](docs/control-
 An exmaple of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
 #### 4.1.2 Brownfield Clusters
-Existing clusters with a functional CNI can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
+Existing clusters with a functional CNI can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing the cluster, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
 
 ##### 4.1.2.1 Unmanaged CNI
-Network Admin - Create fabricinfra.yaml to onboard the fabric.
- 
-On the workload cluster, use acc-provision normal mode to install aci-cni.
-Install netop-manager manifest and create git secret cko-config.
- 
- 
-Following notifications are required from workload cluster to initiate cluster profile creation.
-Observedops:
-Type should be aci-cni to initiate the process.
- 
-Canary Installer:
-(This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster)
-Type should be aci-cni to initiate the process.
- 
-Configmap:
-Acc-provision config:
-All of the fields here are important.
- 
-Aci-operator-config :
-Flavor field is important here to reconstruct acc-provision input.
- 
-Samples for all these are here:
-https://github.com/networkoperator/demo-cluster-manifests/tree/notif_test/workload/status/bm2acicni
- 
- 
-Once all these notifications are available, cluster profile will be created.
-Look for the objects
-auto-<clustername> - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
-auto-<clustername> - [ClusterNetworkProfile] (config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
- 
+Pre-requisite: The network admin has on-boarded the fabric by creating a FabricInfra CR.
+
+This worfklow is initiated in the cluster which needs to be imported.
+
+The first step is to create the secrets to access a Github repo as shown [here](#321-create-secret-for-github-access).
+
+Then apply the CKO workload cluster operator manifests as show [here](#322-deploy-manifests).
+
+Once applied, the notification to import the cluster will be sent to the Control Cluster via Gitops. Once Argo CD syncs on the Control Cluster you will see the following following two resources getting created:
+
+- [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml) with name: auto-<cluster-name>
+- [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml) with name: auto-<cluster-name>
+
+The status of the imported cluster can now be tracked in the Control Cluster. 
 
 ##### 4.1.2.2 Managed CNI
+Pre-requisite: A cluster with an associated ClusterProfile is present. 
+
 Change the following in the ClusterProfile:
 
 ```bash
@@ -462,6 +450,8 @@ to:
     mode: managed
 ...
 ```
+
+This will trigger the workflow on the workload cluster once Argo CD syncs, such that the installed CNI will be managed by the Control Cluster.
 
 #### 4.1.3 Greenfield Clusters
 Pre-requisite: The network admin has on-boarded the fabric by creating a FabricInfra CR.
@@ -536,9 +526,13 @@ status:
   - 'operator: https://github.com/networkoperator/ckogitrepo/tree/test/workload/config/bm2acicni' 
 ```
 
-The complete API spec for the FabricInfra can be found here: [CRD](docs/control-cluster/api_docs.md#clusterprofile)
+When the ClusterProfile is deleted, the allocated resources are returned to the avaliable pool.
 
-An exmaple of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
+The ClusterProfile API also allows to specify all the configurable details with regards to the CNI if the user wants to choose specific values for the fields. For resources that are chosen from the FrabricInfra, those resources will have to be available in the FabricInfra.
+
+The complete API spec for the ClusterProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clusterprofile)
+
+An exmaple of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
 
 #### 4.1.4 Managing Clusters as a Group
 
@@ -789,6 +783,28 @@ kubectl -n nettools get epr -oyaml
 It collects outputs from various fields like events and logs and displays in single place. 
 
 ## 6. Troubleshooting
+
+For Brownfield case:
+Following notifications are required from workload cluster to initiate cluster profile creation.
+Observedops:
+Type should be aci-cni to initiate the process.
+ 
+Canary Installer:
+(This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster)
+Type should be aci-cni to initiate the process.
+ 
+Configmap:
+Acc-provision config:
+All of the fields here are important.
+ 
+Aci-operator-config :
+Flavor field is important here to reconstruct acc-provision input.
+ 
+Once all these notifications are available, cluster profile will be created.
+Look for the objects
+auto-<clustername> - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
+auto-<clustername> - [ClusterNetworkProfile] (config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
+ 
 
 ## 7. Contributing
 
