@@ -684,6 +684,12 @@ It collects outputs from various fields like events and logs and displays in sin
 
 * System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/commits/cko-mvp-1)
 
+* Control Cluster Helm Chart: [netop-helm](https://github.com/noironetworks/netop-helm)
+
+* Workload Cluster Manifests: [netop-manifests](https://github.com/noironetworks/netop-manifests)
+
+* User Documentation: [cko](https://github.com/noironetworks/cko)
+
 ### 7.2 Contributing to CKO
 
 [Developer Guide](docs/dev-guide/dev-and-contribute.md)
