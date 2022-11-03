@@ -366,7 +366,7 @@ Update CKO version in ClusterProfile by changing the following:
 #### 4.1.9 Upgrade Control Cluster
 
 ```bash
-	helm upgrade --install cko deploy/charts/netops-org-manager -n netop-manager --create-namespace \
+	helm upgrade --install netop-org-manager deploy/charts/netops-org-manager -n netop-manager --create-namespace \
 	--set image.tag=${VERSION} --set image.repository=${IMAGE_TAG_BASE} \
 	--set fabricManagerImage.repository=quay.io/ckodev/netop-fabric-manager \
 	--set image.pullPolicy=IfNotPresent
