@@ -32,9 +32,8 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [4.2 API Reference](#42-api-reference)
   - [4.3 Sample Configuration](#43-sample-configuration)
 - [5. Observability & Diagnostics](#5-observability--diagnostics)
-  - [5.1 Tracking Control Cluster Status](#51-tracking-control-cluster-status)
-  - [5.2 Tracking Workload Clusters](#52-tracking-workload-clusters)
-    - [5.2.1 Connectivity Checker](#521-connectivity-checker)
+  - [5.1 Diagnostics on the Control Cluster](#51-diagnostics-on-the-control-cluster)
+  - [5.2 Diagnosticson on the Workload Clusters](#52-diagnostics-on-the-workload-cluster)
 - [6. Troubleshooting](#6-troubleshooting)
 - [7. Contributing](#7-contributing)
   - [7.1 Repositories](#71-repositories)
@@ -383,11 +382,178 @@ Update CKO version in ClusterProfile by changing the following:
 
 ## 5. Observability & Diagnostics
 
-### 5.1 Tracking Control Cluster Status
+CKO has built-in diagnostic tools that provides insights in to the state of network configuration on both control and workload cluster sides. 
 
-### 5.2 Tracking Workload Clusters
+### 5.1 Diagnostics on the Control Cluster
 
-#### 5.2.1 Connectivity Checker
+#### 5.1.1 Workload cluster configuration state on Control Cluster:
+
+After creating new FabricInfra Custom Resource for new Data Center Fabric, the new POD will be created with a name: *netop-fabric-manager-<FABRIC_NAME>-<RANDOM_NUMBER>* in the *netop-manager* namespace. 
+
+Verify whether the POD has been created, using following command:
+
+```
+kubectl get pods -n netop-manager
+```
+
+After applying ClusterGroupProfile, ClusterProfile Custom Resources (CR) and optionally Config_Map for ClusterNetworkProfile, the workload cluster's network configuration is represented as a Custom Resource *clusterinfoes.netop.mgr* in the Control Cluster. 
+
+*Note* this is namespaced resouce, which will be created in the namespace you specified during creation of control cluster. Use following command to verify network configuration for workload cluster:
+
+```
+kubectl describe clusterinfoes.netop.mgr -n netop-manager <WORKLOAD_CLUSTER_NAME> 
+```
+
+In addition, ClusterProfile Custom Resource (CR) should be populated with the network details in the *.status* field. Artifacts are picked up from the FabricInfra or ClusterNetworkProfile (Config_Map). In addition, the *.status.deployment_script* field of the FabricInfra CR, consist of the URL links to the specific files pushed to the Git repository. Those files will be later used to deploy network configuration to the workload cluster.
+
+#### 5.1.2 Verify network resources used from the common pools:
+
+FabricInfra Custom Resource defines pools of resources such as subnets or VLANs available to use by Workload Clusters. Verify allocated resources by checking FabricInfra Custom Resource status field:
+
+```
+kubectl describe fabricinfras.netop.mgr -n netop-manager <FABRIC_INFRA_NAME>
+```
+
+#### 5.1.3 Verification of connectivity to Git
+
+Configuration of the workload cluster is packaged in to following files and pushed to the Git repository:
+The folder structure is the following:
+
+```
+`-- workload
+    |-- argo
+    |   |-- <workload_cluster_name>
+    |   |   `-- argo_app.yaml
+    `-- config
+        `-- <workload_cluster_name>
+            |-- installer-networking.yaml
+            |-- installer-platform.yaml
+            |-- installer.yaml
+            `-- netop-manager-deployment.yaml
+```
+
+After successfully creation of the workload cluster network configuration in the Control Cluster, those files will be pushed to the Git repository. New folder with the name of the workload cluster will be created.
+
+
+### 5.2 Diagnostics on the Workload Cluster
+
+
+#### 5.2.1 Verify CNI installation
+
+Regardless of the CNI installed, verify that all PODs get IP address and are in the Running or Completed state.
+
+**Note**, that some pods running in the host network namespace and share node IP addresses - those will be running even without CNI installed. 
+
+
+#### 5.2.2 View summary of CNI network configuration of Worlkoad Cluster
+
+The CniOps Custom Resource tracks usage of the network resources, IP pools allocations to nodes. It also tracks and checks for any inconsitencies and stale objects. 
+
+Use following commang to verify status of the CNI:
+
+```
+kubectl describe cniops <CNIOPS_NAME>
+```
+
+This resource is not namespaced. Use *get* to list available resources.
+The output consists of some base64 encrypted configuration, however check the *.Status* field for allocated IP's per node, or inconsistencies reported.
+
+Example output:
+
+```
+Status:
+  Cni Status:
+    Ipam - Scan:  Checking IPAM for inconsistencies...
+
+Loading all IPAM blocks...
+Found 3 IPAM blocks.
+ IPAM block 10.4.189.0/26 affinity=host:calico-gf-master:
+ IPAM block 10.4.190.192/26 affinity=host:calico-gf-worker1:
+ IPAM block 10.4.251.0/26 affinity=host:calico-gf-worker2:
+IPAM blocks record 13 allocations.
+
+Loading all IPAM pools...
+  10.4.0.0/16
+Found 1 active IP pools.
+
+Loading all nodes.
+Found 0 node tunnel IPs.
+
+Loading all workload endpoints.
+Found 13 workload IPs.
+Workloads and nodes are using 13 IPs.
+
+Looking for top (up to 20) nodes by allocations...
+  calico-gf-worker1 has 9 allocations
+  calico-gf-worker2 has 2 allocations
+  calico-gf-master has 2 allocations
+Node with most allocations has 9; median is 2
+
+Scanning for IPs that are allocated but not actually in use...
+Found 0 IPs that are allocated in IPAM but not actually in use.
+Scanning for IPs that are in use by a workload or node but not allocated in IPAM...
+Found 0 in-use IPs that are not in active IP pools.
+Found 0 in-use IPs that are in active IP pools but have no corresponding IPAM allocation.
+
+Check complete; found 0 problems.
+
+    Ipam - Status:  +----------+-------------+-----------+------------+--------------+
+| GROUPING |    CIDR     | IPS TOTAL | IPS IN USE |   IPS FREE   |
++----------+-------------+-----------+------------+--------------+
+| IP Pool  | 10.4.0.0/16 |     65536 | 13 (0%)    | 65523 (100%) |
++----------+-------------+-----------+------------+--------------+
+
+    Version:  Client Version:    v3.23.2
+Git commit:        a52cb86db
+Cluster Version:   v3.23.2
+Cluster Type:      typha,kdd,k8s,operator,bgp,kubeadm
+
+  Cni Type:     calico
+  Cni Version:  3.23
+  Ipam:         +----------+-------------+-----------+------------+--------------+
+| GROUPING |    CIDR     | IPS TOTAL | IPS IN USE |   IPS FREE   |
++----------+-------------+-----------+------------+--------------+
+| IP Pool  | 10.4.0.0/16 |     65536 | 13 (0%)    | 65523 (100%) |
++----------+-------------+-----------+------------+--------------+
+
+  Managed State:        New
+  Observed Generation:  1
+  State:                Running
+  Upgrade Status:
+    Cni Upgrade State:  None
+Events:                 <none>
+```
+
+#### 5.2.3 Connectivity Checker and Error Pods Reporting
+
+*Connectivity Checker* is a tool that constatly verifies and reports various connectivity paths like:
+- node to External
+- node to LB_VIP
+- node to NodePort
+- node to clusterIP
+- node to node
+- node to pod
+- pod to External
+- pod to LB_VIP
+- pod to NodePort
+- pod to clusterIP
+- pod to node
+- pod to pod
+- pod to service
+
+Verify connectivity using following command:
+
+```
+kubectl -n nettools get conncheck -oyaml
+```
+
+*Error Pods Reporting* is another tool that reports Pods in the failed state:
+
+```
+kubectl -n nettools get epr -oyaml
+```
+
+It collects outputs from various fields like events and logs and displays in single place. 
 
 ## 6. Troubleshooting
 
