@@ -424,8 +424,8 @@ Then apply the CKO workload cluster operator manifests as show [here](#322-deplo
 
 Once applied, the notification to import the cluster will be sent to the Control Cluster via Gitops. Once Argo CD syncs on the Control Cluster you will see the following following two resources getting created:
 
-- [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml) with name: auto-<cluster-name>
-- [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml) with name: auto-<cluster-name>
+- [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml) with name: ```auto-<cluster-name>```
+- [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml) with name: ```auto-<cluster-name>```
 
 The status of the imported cluster can now be tracked in the Control Cluster. 
 
@@ -471,7 +471,7 @@ spec:
   cni: aci
 ```
 
-For Calic-CNI:
+For Calico-CNI:
 ```bash
 apiVersion: netop.mgr/v1alpha1
 kind: ClusterProfile
