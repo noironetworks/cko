@@ -61,6 +61,10 @@ These abstractions are modeled to capture the user's intent and then consistentl
 * ClusterNetworkProfile - defined by the Cloud Admin to match the specific needs of one cluster
 * FabricInfra - defined by the Network Admin to model each discrete physical or virtual network infrastructure unit that provides pod, node and external networking capabilities to the cluster
 
+The diagram below illustrates the relationship between these abstactions.
+
+![CKO Resources](docs/user-guide/diagrams/class-diagram.drawio.png)
+
 The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible and can be applied to a group of clusters which can managed as a whole, or create individual snowflakes. 
 
 The diagram below illustrates a typical CKO deployment comprising of one Control Cluster and one or more Workload Clusters with the following CKO components:
