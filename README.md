@@ -538,15 +538,21 @@ An exmaple of the ClusterProfile CR can be found here: [Example CR](config/sampl
 
 Create ClusterGroupProfile with common properties like CNI, Distro etc, set labels.
 
-Create ClusterProfile per cluster, set ClusterGroupProfileSelector to match ClusterGroupProfile's labels.
+After creating the ClusterProfile for a cluster, set ClusterGroupProfileSelector to match ClusterGroupProfile's labels.
 
 Also updates to properties such as CNI management modes (managed versus unmanaged), CKO version, and CNI versions can be done in the ClusterGroupProfile instead of individual clusters.
 
+The complete API spec for the ClusterGroupProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clustergroupprofile)
+
+An exmaple of the ClusterGroupProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clustergroupprofile_aci.yaml)
+
 #### 4.1.5 Managing Clusters Individually
 
-Create ClusterNetworkProfile with common properties like CNI, Distro etc, set labels.
+Create ClusterNetworkProfile ConfigMap with all the specific desired properties for this cluster.
 
 Create ClusterProfile for cluster, set ClusterNetworkProfileSelector to match ClusterNetworkProfile's labels.
+
+An exmaple of the ClusterNetworkProfile ConfigMap can be found here: [Example CR](config/samples/aci-cni/kubernetes/config_maps.yaml)
 
 #### 4.1.6 Customizing Default Behaviors
 * ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
