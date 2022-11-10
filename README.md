@@ -825,7 +825,9 @@ Acc-provision config: All of the fields here are important.
 Aci-operator-config: Flavor field is important here to reconstruct acc-provision input.
  
 Once all these notifications are available, the ClusterProfile and ClusterNetworkProfile will be automatically created:
+
 ```auto-<clustername>``` - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
+
 ```auto-<clustername>``` - [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
  
 
