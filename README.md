@@ -812,24 +812,21 @@ It collects outputs from various fields like events and logs and displays in sin
 
 For Brownfield case:
 Following notifications are required from workload cluster to initiate cluster profile creation.
+
 Observedops:
 Type should be aci-cni to initiate the process.
  
 Canary Installer:
-(This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster)
-Type should be aci-cni to initiate the process.
+This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster. Type should be aci-cni to initiate the process.
  
-Configmap:
-Acc-provision config:
-All of the fields here are important.
+Configmaps:
+Acc-provision config: All of the fields here are important.
  
-Aci-operator-config :
-Flavor field is important here to reconstruct acc-provision input.
+Aci-operator-config: Flavor field is important here to reconstruct acc-provision input.
  
-Once all these notifications are available, cluster profile will be created.
-Look for the objects
-auto-<clustername> - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
-auto-<clustername> - [ClusterNetworkProfile] (config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
+Once all these notifications are available, the ClusterProfile and ClusterNetworkProfile will be automatically created:
+```auto-<clustername>``` - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
+```auto-<clustername>``` - [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
  
 
 ## 7. Contributing
