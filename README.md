@@ -11,10 +11,11 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [3.1 Control Cluster](#31-control-cluster)
     - [3.1.1 Prequisites](#311-prequisites)
     - [3.1.2 Install cert-manager](#312-install-cert-manager)
-    - [3.1.3 Create a config file for Helm install](#313-create-a-config-file-for-helm-install)
-    - [3.1.4 Deploy using Helm](#314-deploy-using-helm)
+    - [3.1.3 Create Secret for Github access](#313-create-secret-for-github-access)
+    - [3.1.4 Create a config file for Helm install](#313-create-a-config-file-for-helm-install)
+    - [3.1.5 Deploy using Helm](#314-deploy-using-helm)
   - [3.2 Workload Cluster](#32-workload-cluster)
-    - [3.2.1 Create Secret for Github access:](#321-create-secret-for-github-access)
+    - [3.2.1 Create Secret for Github access](#321-create-secret-for-github-access)
     - [3.2.2 Deploy Manifests](#322-deploy-manifests)
 - [4. Using CKO](#4-using-cko)
   - [4.1 Workflows](#41-workflows)
@@ -134,14 +135,35 @@ helm install \
   --set installCRDs=true
 ```
 
-#### 3.1.3 Create a config file for Helm install
+#### 3.1.3 Create Secret for Github access
 CKO follows the [GitOps](https://www.weave.works/technologies/gitops/) model using [Argo CD](https://github.com/argoproj/argo-cd) for syncing configuration between Control and Workload clusters. The Git repository details can be provided as shown below. The configuration below assumes that the Git repository is hosted in Github. You can optionally add the HTTP_PROXY details if your clusters require it to communicate with Github.
 
-``` bash
+```bash
+kubectl create ns netop-manager
 
-echo <GITHUB PAT> | base64
-<BASE64 ENCODED GITHUB PAT>
+kubectl create secret generic git-config -n netop-manager \
+--from-literal=repo=https://github.com/<ORG>/<REPO> \
+--from-literal=dir=<DIR> \
+--from-literal=branch=<BRANCH NAME> \
+--from-literal=token=<GITHUB PAT> \
+--from-literal=user=<GIT USER> \
+--from-literal=email=<GIT EMAIL> \
+--from-literal=http_proxy=<HTTP_PROXY> \
+--from-literal=https_proxy=<HTTPS_PROXY> \
+--from-literal=no_proxy=<NO_PROXY>
+
+kubectl create secret generic cko-argo -n netop-manager \
+--from-literal=url=https://github.com/<ORG>/<REPO> \
+--from-literal=type=git  \
+--from-literal=password=<GIT PAT> \
+--from-literal=username=<GIT USER> \
+--from-literal=proxy=<HTTP_PROXY>
+
+kubectl label secret cko-argo -n netop-manager 'argocd.argoproj.io/secret-type'=repository
 ```
+
+#### 3.1.4 Create a config file for Helm install
+Setting the relevant image registries and tags for this release.
 
 ``` bash
 
@@ -159,15 +181,6 @@ fabricManagerImage:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "0.9.0.d04f56f"
 
-gitConfig:
-  cko_git_config: |-
-    git_repo: https://github.com/<ORG>/<REPO>
-    git_dir: <DIR>
-    git_branch: <BRANCH NAME>
-    git_token: <BASE64 ENCODED GITHUB PAT>
-    git_user: <GIT USER>
-    git_email: <GIT EMAIL>
-
 extraEnv:
   - name: HTTP_PROXY
     value: <add-your-http-proxy-addr:port>
@@ -181,7 +194,7 @@ EOF
 
 Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD reconciles with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). If quicker synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/).
 
-#### 3.1.4 Deploy using Helm
+#### 3.1.5 Deploy using Helm
 
 ``` bash
 
@@ -192,11 +205,12 @@ helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-n
 
 ### 3.2 Workload Cluster
 
-#### 3.2.1 Create Secret for Github access:
+#### 3.2.1 Create Secret for Github access
 Provide the same Git repository details as those in the Control Cluster.
 
 ```bash
 kubectl create ns netop-manager-system
+
 kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=repo=https://github.com/<ORG>/<REPO> \
 --from-literal=dir=<DIR> \
@@ -208,12 +222,14 @@ kubectl create secret generic cko-config -n netop-manager-system \
 --from-literal=http_proxy=<HTTP_PROXY> \
 --from-literal=https_proxy=<HTTPS_PROXY> \
 --from-literal=no_proxy=<NO_PROXY>
+
 kubectl create secret generic cko-argo -n netop-manager-system \
 --from-literal=url=https://github.com/<ORG>/<REPO> \
 --from-literal=type=git  \
 --from-literal=password=<GIT PAT> \
 --from-literal=username=<GIT USER> \
 --from-literal=proxy=<HTTP_PROXY>
+
 kubectl label secret cko-argo -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
 ```
 
