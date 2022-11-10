@@ -66,7 +66,7 @@ The diagram below illustrates the relationship between these abstactions.
 
 ![CKO Resources](docs/user-guide/diagrams/class-diagram.drawio.png)
 
-The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible and can be applied to a group of clusters which can managed as a whole, or create individual snowflakes. 
+The abstractions ensure that these persona can seamlessly collaborate to dynamically satisfy the networking needs of the set of clusters they manage. The abstractions are flexible and can be applied to a group of clusters which can be managed as a whole, or can be used to create individual snowflakes. 
 
 The diagram below illustrates a typical CKO deployment comprising of one Control Cluster and one or more Workload Clusters with the following CKO components:
 * A centralized "Org Operator" for identity and resource management 
