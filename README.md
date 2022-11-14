@@ -12,8 +12,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
     - [3.1.1 Prequisites](#311-prequisites)
     - [3.1.2 Install cert-manager](#312-install-cert-manager)
     - [3.1.3 Create Secret for Github access](#313-create-secret-for-github-access)
-    - [3.1.4 Create a config file for Helm install](#314-create-a-config-file-for-helm-install)
-    - [3.1.5 Deploy using Helm](#315-deploy-using-helm)
+    - [3.1.4 Deploy using Helm](#315-deploy-using-helm)
   - [3.2 Workload Cluster](#32-workload-cluster)
     - [3.2.1 Create Secret for Github access](#321-create-secret-for-github-access)
     - [3.2.2 Deploy Manifests](#322-deploy-manifests)
@@ -40,6 +39,9 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [7.1 Repositories](#71-repositories)
   - [7.2 Contributing to CKO](#72-contributing-to-cko)
   - [7.3 Experimenting with Control Cluster](#73-experimenting-with-control-cluster)
+- [Appendix](#Appendix)
+  - [Single Node Control Cluster](#single-node-control-cluster)
+  - [Control Cluster Install Configuration](#control-cluster-install-configuration)
 
 ## 1. Introduction
 
@@ -118,7 +120,7 @@ CKO requires one Control Cluster to be deployed with the CKO operators before an
 ### 3.1 Control Cluster
 
 #### 3.1.1 Prequisites
-* A functional Kubernetes cluster with reachability to the ACI Fabric that will serve as the Control Cluster. (A single node cluster is adequate.)
+* A functional Kubernetes cluster with reachability to the ACI Fabric that will serve as the Control Cluster. A single node cluster is adequate, refer to [Appendix](#single-node-control-cluster) for a quick guide on how to set up one.
 * kubectl
 * Helm
 
@@ -133,6 +135,7 @@ helm install \
   --create-namespace \
   --version v1.10.0 \
   --set installCRDs=true
+  --wait
 ```
 
 #### 3.1.3 Create Secret for Github access
@@ -162,46 +165,17 @@ kubectl create secret generic cko-argo -n netop-manager \
 kubectl label secret cko-argo -n netop-manager 'argocd.argoproj.io/secret-type'=repository
 ```
 
-#### 3.1.4 Create a config file for Helm install
-Setting the relevant image registries and tags for this release.
-
-``` bash
-
-cat > my_values.yaml << EOF
-image:
-  repository: quay.io/ckodev/netop-org-manager
-  pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.0.d04f56f"
-
-## -- Specifies image details for netop-farbic-manager
-fabricManagerImage:
-  repository: quay.io/ckodev/netop-fabric-manager
-  pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.0.d04f56f"
-
-extraEnv:
-  - name: HTTP_PROXY
-    value: <add-your-http-proxy-addr:port>
-  - name: HTTPS_PROXY
-    value: <add-your-https-proxy-addr:port>
-  - name: NO_PROXY
-    value: 10.96.0.1
-
-EOF
-```
-
-Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD reconciles with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). If quicker synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/).
-
-#### 3.1.5 Deploy using Helm
+#### 3.1.4 Deploy using Helm
+Use the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml``` used during the helm install of CKO in the control cluster. It sets the relevant image registries, tags and optionally HTTP-Proxy configuration.
 
 ``` bash
 
 helm repo add cko https://noironetworks.github.io/netop-helm
 helm repo update
-helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.0 -f my_values.yaml
+helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.0 -f my_values.yaml --wait
 ```
+
+Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD reconciles with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). If faster synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/).
 
 ### 3.2 Workload Cluster
 
@@ -886,4 +860,151 @@ spec:
   ...
   provision_fabric: "false"
   ...
+```
+
+## Appendinx
+
+### Single Node Control Cluster
+A simple single node cluster can be deployed using [Kind](https://kind.sigs.k8s.io/). This section describes the steps to get a single node kind cluster installed.
+
+A Kind-based cluster should not be used in production. Please refer to [production best practices](https://kubernetes.io/docs/setup/production-environment/) before deploying a CKO Control Cluster for production use.
+
+#### Install Docker Engine
+If Docker is not installed, please [install](https://docs.docker.com/engine/install/) it first.
+
+#### On Linux:
+```
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+```
+
+#### On MacOS:
+```
+# for Intel Macs
+[ $(uname -m) = x86_64 ]&& curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-darwin-amd64
+# for M1 / ARM Macs
+[ $(uname -m) = arm64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-darwin-arm64
+chmod +x ./kind
+mv ./kind /some-dir-in-your-PATH/kind
+```
+
+#### Create Cluster
+```
+kind create cluster --name control-cluster
+kubectl cluster-info --context control-cluster
+```
+
+#### Install kubectl
+```
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+chmod +x kubectl
+mv ./kubectl /usr/local/bin/kubectl
+kubectl version --client"
+```
+
+#### Install Helm
+Install Helm using [these](https://helm.sh/docs/intro/install/) istructions.
+
+### Control Cluster Install Configuration
+If your deployment requires a HTTP-Proxy to reach the git repo, uncomment the ```extraEnv``` section below and configure the relevant values.
+
+``` bash
+
+cat > my_values.yaml << EOF
+## -- Specifies image details for netop-farbic-manager
+# extraEnv:
+#  - name: HTTP_PROXY
+#    value: <add-your-http-proxy-addr:port>
+#  - name: HTTPS_PROXY
+#    value: <add-your-https-proxy-addr:port>
+#  - name: NO_PROXY
+#    value: <add-any-other-IP-as-needed>,10.96.0.1,.netop-manager.svc,.svc,.cluster.local,localhost,127.0.0.1,10.96.0.0/16,10.244.0.0/16,control-cluster-control-plane,.svc,.svc.cluster,.svc.cluster.local
+
+# Default values for netops-org-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: quay.io/ckodev/netop-org-manager
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.9.0.d04f56f"
+
+## -- Specifies image details for netop-farbic-manager
+fabricManagerImage:
+  repository: quay.io/ckodev/netop-fabric-manager
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.9.0.d04f56f"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Specifies whether to enable ValidatingWebhook
+webhook:
+  enable: true
+
+## -- Specifies the log level. Can be one of ‘debug’, ‘info’, ‘error’, or any integer value > 0.
+logLevel: "info"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 500m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 10m
+  #   memory: 64Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+## -- Specifies `managerConfig`
+managerConfig:
+  controller_manager_config.yaml: |
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8083
+    metrics:
+      bindAddress: 127.0.0.1:8082
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: 2edab99a.
+
+# -- Specifies whether to install a ArgoCD
+argocd:
+  enabled: true
+
+# -- Specifies whether to install a Kubernetes Dashboard
+kubernetes-dashboard:
+  enabled: true
+  rbac:
+    clusterReadOnlyRole: true
+EOF
 ```
