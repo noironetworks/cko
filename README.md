@@ -12,7 +12,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
     - [3.1.1 Prequisites](#311-prequisites)
     - [3.1.2 Install cert-manager](#312-install-cert-manager)
     - [3.1.3 Create Secret for Github access](#313-create-secret-for-github-access)
-    - [3.1.4 Deploy using Helm](#315-deploy-using-helm)
+    - [3.1.4 Deploy using Helm](#314-deploy-using-helm)
   - [3.2 Workload Cluster](#32-workload-cluster)
     - [3.2.1 Create Secret for Github access](#321-create-secret-for-github-access)
     - [3.2.2 Deploy Manifests](#322-deploy-manifests)
@@ -862,7 +862,7 @@ spec:
   ...
 ```
 
-## Appendinx
+## Appendix
 
 ### Single Node Control Cluster
 A simple single node cluster can be deployed using [Kind](https://kind.sigs.k8s.io/). This section describes the steps to get a single node kind cluster installed.
