@@ -144,7 +144,7 @@ CKO follows the [GitOps](https://www.weave.works/technologies/gitops/) model usi
 ```bash
 kubectl create ns netop-manager
 
-kubectl create secret generic git-config -n netop-manager \
+kubectl create secret generic cko-config -n netop-manager \
 --from-literal=repo=https://github.com/<ORG>/<REPO> \
 --from-literal=dir=<DIR> \
 --from-literal=branch=<BRANCH NAME> \
