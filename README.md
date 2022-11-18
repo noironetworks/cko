@@ -153,7 +153,7 @@ kubectl create secret generic cko-config -n netop-manager \
 --from-literal=email=<GIT EMAIL> \
 --from-literal=http_proxy=<HTTP_PROXY> \
 --from-literal=https_proxy=<HTTPS_PROXY> \
---from-literal=no_proxy=<NO_PROXY>
+--from-literal=no_proxy=<add-any-other-IP-as-needed>,10.96.0.1,.netop-manager.svc,.svc,.cluster.local,localhost,127.0.0.1,10.96.0.0/16,10.244.0.0/16,control-cluster-control-plane,.svc,.svc.cluster,.svc.cluster.local
 
 kubectl create secret generic cko-argo -n netop-manager \
 --from-literal=url=https://github.com/<ORG>/<REPO> \
@@ -205,6 +205,18 @@ kubectl create secret generic cko-argo -n netop-manager-system \
 --from-literal=proxy=<HTTP_PROXY>
 
 kubectl label secret cko-argo -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
+```
+
+Note: When using a http_proxy, the following need to be added to the no-proxy configuration:
+
+* In the Kubernetes case: 
+```
+10.96.0.1,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
+```
+
+* In the OpenShift case: 
+```
+oauth-openshift.apps.<based-domain-from-install-config-yaml>.local,console-openshift-console.apps.<based-domain-from-install-config-yaml>.local,downloads-openshift-console.apps.<based-domain-from-install-config-yaml>.local,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
 ```
 
 For ACI-CNI, in case if importing a cluster which has a functioning CNI, the system-id is corresponds to the one mentioned in the acc-provision input file. For all other cases, you can chose a name to assign an identity to this cluster.
@@ -912,15 +924,6 @@ If your deployment requires a HTTP-Proxy to reach the git repo, uncomment the ``
 ``` bash
 
 cat > my_values.yaml << EOF
-## -- Specifies image details for netop-farbic-manager
-# extraEnv:
-#  - name: HTTP_PROXY
-#    value: <add-your-http-proxy-addr:port>
-#  - name: HTTPS_PROXY
-#    value: <add-your-https-proxy-addr:port>
-#  - name: NO_PROXY
-#    value: <add-any-other-IP-as-needed>,10.96.0.1,.netop-manager.svc,.svc,.cluster.local,localhost,127.0.0.1,10.96.0.0/16,10.244.0.0/16,control-cluster-control-plane,.svc,.svc.cluster,.svc.cluster.local
-
 # Default values for netops-org-manager.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
