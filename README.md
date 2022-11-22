@@ -632,7 +632,7 @@ To avoid accidentally breaking the Workload Cluster, deletion of CKO and/or the 
 #### 4.1.10 Upgrade Control Cluster
 
 ```bash
-	helm upgrade --install netop-org-manager deploy/charts/netops-org-manager -n netop-manager --create-namespace \
+	helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace \
 	--set image.tag=${VERSION} --set image.repository=${IMAGE_TAG_BASE} \
 	--set fabricManagerImage.repository=quay.io/ckodev/netop-fabric-manager \
 	--set image.pullPolicy=IfNotPresent
