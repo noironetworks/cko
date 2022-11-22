@@ -540,6 +540,8 @@ The complete API spec for the ClusterProfile can be found here: [CRD](docs/contr
 
 An exmaple of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
 
+Once the ClusterProfile CR is created successfully, the focus shifts to the Workload Cluster to deploy CKO using by following these [instructions](#32-workload-cluster). This will result in CKO running in the Workload Cluster and which will in turn deploy the CNI.
+
 #### 4.1.4 Managing Clusters as a Group
 
 Create ClusterGroupProfile with common properties like CNI, Distro etc, set labels.
