@@ -639,7 +639,7 @@ To avoid accidentally breaking the Workload Cluster, deletion of CKO and/or the 
 ```
 
 ### 4.2 API Reference
-* [User API](docs/control-cluster/api_docs.md_)
+* [User API](docs/control-cluster/api_docs.md)
 * [Editable Properties](docs/control-cluster/property_update_docs.md)
 
 ### 4.3 Sample Configurations
