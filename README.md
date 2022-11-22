@@ -19,6 +19,14 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 - [4. Using CKO](#4-using-cko)
   - [4.1 Workflows](#41-workflows)
     - [4.1.1 Fabric Onboarding](#411-fabric-onboarding)
+    - [4.1.1.1 Fabric Identity](#4111-fabric-identity)
+    - [4.1.1.2 Fabric Resources for Brownfield Clusters](#4112-fabric-resources-for-brownfield-clusters)
+    - [4.1.1.3 Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters)
+    - [4.1.1.3.1 Subnets and VLANs](#41131-subnets-and-vlans)
+    - [4.1.1.3.2 External Connectivity](#41132-external-connectivity)
+    - [4.1.1.3.3 Topology](#41133-topology)
+    - [4.1.1.3.4 BGP](#41134-bgp)
+    - [4.1.1.4 Allocation Status](#4114-allocation-status)
     - [4.1.2 Brownfield Clusters](#412-brownfield-clusters)
       - [4.1.2.1 Unmanaged CNI](#4121-unmanaged-cni)
       - [4.1.2.2 Managed CNI](#4122-managed-cni)
@@ -248,6 +256,7 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 #### 4.1.1 Fabric Onboarding
 Each network infrasructure unit (referred to as a fabric), and that is managed as an independent entity, is modeled in CKO using the FabricInfra CRD. The network admin creates a FabricInfra CR to establish the identity of the of that fabric, and allows the network admin to specify the set of resources available to be consumed on that fabric. CKO reserves these resources in the FabricInfra on the cluster's behalf, and performs the necessary provisioning on the fabric to enable the networking for the cluster.
 
+##### 4.1.1.1 Fabric Identity
 The following fields are required when creating the FabricInfra:
 
 ```bash
@@ -269,7 +278,16 @@ kubectl create secret -n netop-manager generic apic-credentials --from-literal=u
 
 The username provided above should have privileges to access at least the "common" tenant on the APIC.
 
-IPAM, VLANs and other such enumerated resources can be specified in the FabricInfr as pools:
+##### 4.1.1.2 Fabric Resources for Brownfield Clusters
+Fabric requirements for subnets, VLAN and external connectivity do not need to be explicitly defined in the FabricInfra spec for imported clusters. Since these resources are already in use on the fabric, CKO will learn them at the time of importing a particular cluster, and automatically reserve them in the FabricInfra. These resources will however not be released to the available pool when the imported cluster is removed from CKO.
+
+If dealing only with brownfield clusters no further configuration is required to be specified in the FabricInfra.
+
+##### 4.1.1.3 Fabric Resources for Greenfield Clusters
+Fabric resources needed for a cluster can be individually specified as a part of the ClusterProfile or the ClusterNetworkProfile. Alternatively, fabric resources needed for multiple clusters can be optionally specified as pools in the FabricInfra spec such that allocations can be made to individual clusters on demand. If the fabric resources are not specified as a part of the ClusterProfile or ClusterNetworkProfile, the required resources are allocated from the available pools of resources.
+
+##### 4.1.1.3.1 Subnets and VLANs
+The snippet below shows how subnets used for node networks, multicast (for ACI-CNI), external connectivity, and VLANs (for ACI-CNI) for node and service networks can be specified: 
 
 ```bash
   ...
@@ -296,12 +314,13 @@ IPAM, VLANs and other such enumerated resources can be specified in the FabricIn
     ...
 ```
 
-At least four internal subnets (for pod, node and services networks), one multicast subnet, and two external subnets need to be available for every cluster.
-
-Note: The minimum requirements vary across the deployment scenarios and supported CNIs. Not all the resources dictated by the minimum requriements will be used. The optimization is underway to validate the minimum requirements for each of these cases separately and will relax this minimum requirements in an uppcoming release.
+If fabric resources are being allocated from the FabricInfra pools, at least two internal subnets, one multicast subnet, two external subnets, and two VLANs need to be available for a greenfield cluster with ACI-CNI, or at least one external subnet needs to be available for a greenfield cluster with Calico CNI.
 
 CKO will automatically pick available resources from resource pools. Resources are picked in round-robin fashion. CKO currently does not partition the subnets, so each subnet specified in the resource pool is treated as an indivisible pool. If smaller subnets are desired, they should be listed as individual subnets.
 
+Note: The pod subnet is not picked from the pool since its local to a cluster. It defaults to 10.2.0.0/16 and can be overridden in the ClusterProfile, or ClusterGroupProfile, or ClusterNetworkProfile.
+
+##### 4.1.1.3.2 External Connectivity
 The kubernetes_node-to-fabric and fabric-to-external connectivity on each fabric is encapsulated in the context property of the FabricInfra. For example in the case of the ACI fabric, the following example shows the context and its constituent properties:
 
 ```bash
@@ -321,7 +340,8 @@ The kubernetes_node-to-fabric and fabric-to-external connectivity on each fabric
 
 At least one context is required for each cluster, and all fields in the context are required. CKO currently does not create ACI AEP, VRF, and L3out; they have to be created by the network admin and referenced in the above configuration.
 
-The kubernetes_nodes and top-of-the-racks interconnection topology per fabric is captured in the topology section as shown below:
+##### 4.1.1.3.3 Topology
+The kubernetes_nodes and top-of-the-rack interconnection topology per fabric is captured in the topology section as shown below:
 
 ```bash
   topology:
@@ -344,8 +364,11 @@ The kubernetes_nodes and top-of-the-racks interconnection topology per fabric is
       - name: k8s-node4
 ```
 
-The specification of the topology section is required when the fabric is intended to be used for the Calico CNI, its optional if only the ACI-CNI is intended to be deployed. The rack and aci_pod_id properties are user defined, where as the lead IDs correspond to their correponding values on the fabric.
+The specification of the topology section is required when the fabric is intended to be used for clusters with the Calico CNI, its optional if only the ACI-CNI is intended to be deployed. The rack and aci_pod_id properties are user defined, where as the lead IDs correspond to their correponding values on the fabric.
 
+Note: If deploying more than one cluster with Calico CNI, current limitations require the topology to be specified as a part of the ClusterNetworkProfile.
+
+##### 4.1.1.3.4 BGP
 The BGP configuration for the fabric can be specified as follows:
 
 ```bash
@@ -357,6 +380,7 @@ The BGP configuration for the fabric can be specified as follows:
 
 The specification of the bgp section is required when the fabric is intended to be used for the Calico CNI, its optional if only the ACI-CNI is intended to be deployed.
 
+##### 4.1.1.4 Allocation Status
 All avaliable and allocated resource are refelected in the status field of the FabricInfra as shown in the example below:
 
 ```bash
@@ -411,8 +435,6 @@ status:
     - 103
     - 104
 ```
-
-Note: Subnet, VLAN and context resources do not need to be explicitly defined in the FabricInfra spec for imported clusters. Since these resources are already in use on the fabric, CKO will learn them at the time of importing the cluster, and automatically reserve those resources in the FabricInfra. These resources will however not be release to the available pool when the cluster is deleted.
 
 The complete API spec for the FabricInfra can be found here: [CRD](docs/control-cluster/api_docs.md#fabricinfra)
 
@@ -632,9 +654,9 @@ CKO has built-in diagnostic tools that provides insights in to the state of netw
 
 #### 5.1.1 Workload cluster configuration state on Control Cluster:
 
-After creating new FabricInfra Custom Resource for new Data Center Fabric, the new POD will be created with a name: *netop-fabric-manager-<FABRIC_NAME>-<RANDOM_NUMBER>* in the *netop-manager* namespace. 
+After creating new FabricInfra Custom Resource for new Data Center Fabric, the new pod will be created with a name: *netop-fabric-manager-<FABRIC_NAME>-<RANDOM_NUMBER>* in the *netop-manager* namespace. 
 
-Verify whether the POD has been created, using following command:
+Verify whether the pod has been created, using following command:
 
 ```
 kubectl get pods -n netop-manager
@@ -684,7 +706,7 @@ After successfully creation of the workload cluster network configuration in the
 
 #### 5.2.1 Verify CNI installation
 
-Regardless of the CNI installed, verify that all PODs get IP address and are in the Running or Completed state.
+Regardless of the CNI installed, verify that all pods get IP address and are in the Running or Completed state.
 
 **Note**, that some pods running in the host network namespace and share node IP addresses - those will be running even without CNI installed. 
 
