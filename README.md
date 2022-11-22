@@ -28,7 +28,8 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
     - [4.1.6 Customizing Default Behaviors](#416-customizing-default-behaviors)
     - [4.1.7 Upgrade Managed CNI Operators](#417-upgrade-managed-cni-operators)
     - [4.1.8 Upgrade CKO in Workload Cluster](#418-upgrade-cko-in-workload-cluster)
-    - [4.1.9 Upgrade Control Cluster](#419-upgrade-control-cluster)
+    - [4.1.9 Deleting CKO from Workload Cluster](#419-deleting-cko-from-workload-cluster)
+    - [4.1.10 Upgrade Control Cluster](#4110-upgrade-control-cluster)
   - [4.2 API Reference](#42-api-reference)
   - [4.3 Sample Configuration](#43-sample-configuration)
 - [5. Observability & Diagnostics](#5-observability--diagnostics)
@@ -42,6 +43,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
 - [Appendix](#Appendix)
   - [Single Node Control Cluster](#single-node-control-cluster)
   - [Control Cluster Install Configuration](#control-cluster-install-configuration)
+  - [CKO Cleanup in Workload Cluster](#cko-cleanup-in-workload-cluster)
 
 ## 1. Introduction
 
@@ -602,7 +604,10 @@ Update CKO version in ClusterProfile by changing the following:
 ...
 ```
 
-#### 4.1.9 Upgrade Control Cluster
+#### 4.1.9 Deleting CKO from Workload Cluster
+To avoid accidentally breaking the Workload Cluster, deletion of CKO and/or the CNI is an explicit step. Please refer to the cleanup instructions in the [Appendix](#cko-cleanup-in-workload-cluster) to initiate this cleanup. The ClusterProfile should be deleted only after the cleanup has been performed on the Workload Cluster. The configuration on the Fabric for this cluster is cleaned up after the ClusterProfile is deleted.
+
+#### 4.1.10 Upgrade Control Cluster
 
 ```bash
 	helm upgrade --install netop-org-manager deploy/charts/netops-org-manager -n netop-manager --create-namespace \
@@ -1012,4 +1017,103 @@ kubernetes-dashboard:
   rbac:
     clusterReadOnlyRole: true
 EOF
+```
+
+### CKO Cleanup in Workload Cluster
+The following script can be used to cleanup CKO in the Workload Cluster (note the script will optionally allow you to delete ACI-CNI):
+
+``` bash
+#!/bin/bash
+
+delete_namespace () {
+
+for i in $(seq 5); do
+    timeout 5s kubectl delete ns $1
+    out=$(kubectl get ns $1 2>&1)
+    if [[ $out == *'Error'* ]]; then
+        break
+    fi
+done
+
+out=$(kubectl get ns $1 2>&1)
+if [[ $out == *'Terminating'* ]]; then
+        echo "Deleting terminating namespace $1 .."
+
+        ns=$1
+        kubectl get namespace $ns -o json \
+        | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" \
+        | kubectl replace --raw /api/v1/namespaces/$ns/finalize -f -
+fi
+
+}
+ echo "Deleting applications.argoproj.io CR"
+
+ kubectl delete applications -A --all
+
+ echo "Deleting errorpodsreportings.nettools.debug CR...."
+
+ kubectl delete epr --all -n nettools
+
+ echo "Deleting connectivitycheckers.nettools.debug CR..."
+
+ kubectl delete conncheck --all -n nettools
+
+ echo "Deleting connectivitycheckers resources..."
+
+ kubectl delete ds test-connectivity-ds -n nettools
+
+ kubectl delete deploy test-connectivity -n nettools
+
+ kubectl delete deploy nginx-deploy -n nettools
+
+ kubectl delete deploy  nettools-debug -n nettools
+
+ kubectl delete po --all --grace-period=0 --force --namespace nettools
+
+ echo "Deleting namespace nettools.."
+ delete_namespace "nettools"
+
+ echo "Deleting installers.controller.netop-manager.io CR..."
+
+ kubectl delete installer -A --all
+
+ echo "Deleting netop-manager static manifests..."
+ 
+ timeout 10s kubectl delete  -f https://raw.githubusercontent.com/noironetworks/netop-manifests/cko-mvp-1/workload/netop-manager-openshift.yaml
+
+ kubectl delete po --all --grace-period=0 --force --namespace netop-manager-system
+
+ echo "Deleting namespace netop-manager-system.."
+ delete_namespace "netop-manager-system"
+
+ read -p "Delete the CNI ? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+
+ echo "Deleting CNI ......"
+
+kubectl -n aci-containers-system delete --all deploy
+timeout 10s kubectl -n aci-containers-system delete all --all
+kubectl -n aci-containers-system delete --all serviceaccount
+kubectl -n aci-containers-system delete --all clusterrole
+kubectl -n aci-containers-system delete --all clusterrolebinding
+kubectl -n aci-containers-system delete --all ds
+kubectl -n aci-containers-system delete --all secret
+kubectl -n aci-containers-system delete --all cm
+kubectl -n aci-containers-system delete --all AccProvisionInput
+kubectl -n aci-containers-system delete --all PruneDropLog
+kubectl -n aci-containers-system delete --all ErspanPolicy
+kubectl -n aci-containers-system delete --all NetflowPolicy
+kubectl -n aci-containers-system delete --all QosPolicy
+kubectl -n aci-containers-system delete --all DnsNetworkPolicy
+kubectl -n aci-containers-system delete --all NetworkPolicy
+kubectl -n aci-containers-system delete --all RdConfig
+kubectl -n aci-containers-system delete --all NodeInfo
+kubectl -n aci-containers-system delete --all SnatPolicy
+kubectl -n aci-containers-system delete --all SnatLocalInfo
+kubectl -n aci-containers-system delete --all SnatGlobalInfo
+kubectl -n aci-containers-system delete --all NodePodIF
+kubectl -n aci-containers-system delete --all AciContainersOperator
+
+kubectl delete po --all --grace-period=0 --force --namespace aci-containers-system
+echo "Deleting NameSpace aci-containers-system ..."
+delete_namespace "aci-containers-system"
 ```
