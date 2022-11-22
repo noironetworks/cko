@@ -948,7 +948,7 @@ kubectl version --client"
 Install Helm using [these](https://helm.sh/docs/intro/install/) istructions.
 
 ### Control Cluster Install Configuration
-If your deployment requires a HTTP-Proxy to reach the git repo, uncomment the ```extraEnv``` section below and configure the relevant values.
+Use the following ```my_values.yaml``` when installing the CKO Helm Chart for the Control Cluster for release 0.9.0:
 
 ``` bash
 
