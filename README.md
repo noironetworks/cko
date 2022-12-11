@@ -502,7 +502,7 @@ to:
 This will trigger the workflow on the workload cluster once Argo CD syncs, such that the installed CNI will be managed by the Control Cluster.
 
 #### 4.1.3 Greenfield Clusters
-* Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity). In addition, depending on the CNI that is intended to be deployed, additional FabricInfra configuration may be required as indicated in the section [Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters). As such, for existing ACI users already familiar with configuring the acc-provision input file, the [Brownfield workflow](#412-brownfield-clusters) might be preferable to on-ramp their clusters (even new clusters) as opposed to this Greenfield worflow.
+* Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity). In addition, depending on the CNI that is intended to be deployed, additional FabricInfra configuration may be required as indicated in the section [Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters). As such, for existing ACI users already familiar with configuring the acc-provision input file, the [Brownfield workflow](#412-brownfield-clusters) might be preferable to on-ramp their clusters (even new clusters) as opposed to this Greenfield workflow.
 
 * Note that in the Calico CNI case the topology model in the FabricInfra is currently resrticted to specifying host-level connectivity only for a single Workload Cluster. This can be worked around by explicitly specifying the topology per cluster in the ClusterProfile or ClusterNetworkProfile CRs.
 
