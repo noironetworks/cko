@@ -229,6 +229,9 @@ Note: When using a http_proxy, the following need to be added to the no-proxy co
 oauth-openshift.apps.<based-domain-from-install-config-yaml>.local,console-openshift-console.apps.<based-domain-from-install-config-yaml>.local,downloads-openshift-console.apps.<based-domain-from-install-config-yaml>.local,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
 ```
 
+* In the Calico CNI case:
+In addition to the above, add ```.calico-apiserver.svc``
+
 For ACI-CNI, in case if importing a cluster which has a functioning CNI, the system-id is corresponds to the one mentioned in the acc-provision input file. For all other cases, you can chose a name to assign an identity to this cluster.
 
 #### 3.2.2 Deploy Manifests
