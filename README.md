@@ -106,7 +106,7 @@ This release has support for:
 * ACI-CNI 5.2.3.4
 * Calico CNI with Tigera Operator 3.23
 * OCP 4.10
-* Kubernetes 1.22 or later
+* Kubernetes 1.22, 1.23, 1.24
 
 ### 2.2 Roadmap Items Under Development
 Support for the following technologies and products is being actively pursued:
@@ -230,7 +230,7 @@ oauth-openshift.apps.<based-domain-from-install-config-yaml>.local,console-opens
 ```
 
 * In the Calico CNI case:
-In addition to the above, add ```.calico-apiserver.svc``
+In addition to the above, add ```.calico-apiserver.svc```
 
 For ACI-CNI, in case if importing a cluster which has a functioning CNI, the system-id is corresponds to the one mentioned in the acc-provision input file. For all other cases, you can chose a name to assign an identity to this cluster.
 
