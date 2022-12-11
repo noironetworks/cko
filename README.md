@@ -450,12 +450,21 @@ The complete API spec for the FabricInfra can be found here: [CRD](docs/control-
 An example of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
 #### 4.1.2 Brownfield Clusters
-Existing clusters with a functional CNI provisioned with acc-provision flavors for release 5.2.3.4 can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing the cluster, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
+Existing clusters with a functional CNI provisioned with acc-provision flavors for release 5.2.3.4 can be imported into CKO. Please refer to the following documentation for installing a cluster with ACI CNI or Calico CNI on ACI:
+* ACI CNI
+    * [Cisco ACI and Kubernetes Integration](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/kb/b_Kubernetes_Integration_with_ACI.html#task_ggz_svz_r1b)
+    * [Installing OpenShift 4.10 on Bare Metal](https://www.cisco.com/c/en/us/td/docs/dcn/aci/containers/installation/installing-openshift-4-10-on-baremetal.html)
+    * [Installing OpenShift 4.10 on OpenStack 16.2](https://www.cisco.com/c/en/us/td/docs/dcn/aci/containers/installation/openshift-on-openstack/installing-openshift-4-10-on-openstack-16-2.html)
+    * [Installing OpenShift 4.10 on VMware vSphere](https://www.cisco.com/c/en/us/td/docs/dcn/aci/containers/installation/openshift-on-vsphere/installing-openshift-4-10-on-vmware-vsphere.html)
+* Calico CNI
+    * [Cisco ACI and Calico 3.23.2 Integration](https://www.cisco.com/c/en/us/td/docs/dcn/aci/containers/installation/cisco-aci-calico-integration/cisco-aci-with-calico-integration.html)
+
+ The imported cluster will initially have its CNI in an observed, but unmanaged, state by CKO. After succesfully importing the cluster, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
 
 ##### 4.1.2.1 Unmanaged CNI
-Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity).
+* Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity).
 
-This worfklow is initiated in the cluster which needs to be imported.
+This worfklow is initiated in the Workload Cluster which needs to be imported.
 
 The first step is to create the secrets to access a Github repo as shown [here](#321-create-secret-for-github-access).
 
@@ -469,7 +478,7 @@ Once applied, the notification to import the cluster will be sent to the Control
 The status of the imported cluster can now be tracked in the Control Cluster. 
 
 ##### 4.1.2.2 Managed CNI
-Pre-requisite: A cluster with an associated ClusterProfile is present (this will have happened if the import workflow was successful as described in the [previous section](#4121-unmanaged-cni)). 
+* Pre-requisite: A cluster with an associated ClusterProfile is present (this will have happened if the import workflow was successful as described in the [previous section](#4121-unmanaged-cni)). 
 
 Change the following in the relevant ClusterProfile:
 
@@ -493,9 +502,11 @@ to:
 This will trigger the workflow on the workload cluster once Argo CD syncs, such that the installed CNI will be managed by the Control Cluster.
 
 #### 4.1.3 Greenfield Clusters
-Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity). In addition, depending on the CNI that is intended to be deployed, additional FabricInfra configuration may be required as indicated in the section [Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters).
+* Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity). In addition, depending on the CNI that is intended to be deployed, additional FabricInfra configuration may be required as indicated in the section [Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters). As such, for existing ACI users already familiar with configuring the acc-provision input file, the [Brownfield workflow](#412-brownfield-clusters) might be preferable to on-ramp their clusters (even new clusters) as opposed to this Greenfield worflow.
 
-The user then creates a simple ClusterProfile and specifies the CNI.
+* Note that in the Calico CNI case the topology model in the FabricInfra is currently resrticted to specifying host-level connectivity only for a single Workload Cluster. This can be worked around by explicitly specifying the topology per cluster in the ClusterProfile or ClusterNetworkProfile CRs.
+
+The user creates a simple ClusterProfile and specifies the CNI.
 
 For ACI-CNI:
 ```bash
