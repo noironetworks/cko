@@ -128,6 +128,7 @@ The above list is not comprehensive and we are constantly evaluating and adding 
 CKO requires one Control Cluster to be deployed with the CKO operators before any Workload Clusters can be managed by CKO. Existing Workload Clusters with a functioning CNI can be imported into CKO.
 
 ### 3.1 Control Cluster
+This section describes the setup of the Control Cluster that manages the Workload Clusters.
 
 #### 3.1.1 Prequisites
 * A functional Kubernetes cluster with reachability to the ACI Fabric that will serve as the Control Cluster. A single node cluster is adequate, refer to [Appendix](#single-node-control-cluster) for a quick guide on how to set up one.
@@ -185,9 +186,14 @@ helm repo update
 helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.0 -f my_values.yaml --wait
 ```
 
-Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD reconciles with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). If faster synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/).
+Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD starts reconciliation with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). The reconciliation time depends on the number of objects being synchronized and can potentially take longer at times. If more frequent synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/) to reduce time interval between the reconciliation start times.
 
 ### 3.2 Workload Cluster
+CKO handles the integration and management of the CNI in the Workload Clusters as two distinct cases:
+* Brownfield - The Workload Cluster already exists with a fully functioning and supported CNI. An import workflow is used to make the CNI in such a cluster visible to the Control Cluster. In the Brownfield case CKO further provides the choice of (a) only observing, or (b) fully managing the CNI, and referred to as "Unmanaged" or "Managed" states respectively. The import workflow upon successful completion will always result in the "Unmanaged" state. The CNI can be moved to a "Managed" state through an explicit action by the user. Please refer to the [Brownfield case workflow](#412-brownfield-clusters) section for proceeding further.
+* Greenfield - A new Workload Cluster needs to be installed. The network configuration for this planned cluster is initiated from the Control Cluster by creating the relevant ClusterProfile and/or ClusterGroupProfile/ClusterNetworkProfile CRs. Please refer to the [Greenfield case workflow](#413-greenfield-clusters) section for proceeding further.
+
+The rest of this section provides the steps for deploying the CKO components in the Workload Cluster. However, prior to any action in the Workload Cluster, the user needs to identify and initiate the appropriate [Brownfield case workflow](#412-brownfield-clusters) or the [Greenfield case workflow](#413-greenfield-clusters) at least once for the Workload Cluster under consideration. 
 
 #### 3.2.1 Create Secret for Github access
 Provide the same Git repository details as those in the Control Cluster.
@@ -217,22 +223,22 @@ kubectl create secret generic cko-argo -n netop-manager-system \
 kubectl label secret cko-argo -n netop-manager-system 'argocd.argoproj.io/secret-type'=repository
 ```
 
-Note: When using a http_proxy, the following need to be added to the no-proxy configuration:
+* When importing a cluster with a functional ACI CNI (Brownfield case), the ```systemid``` parameter in the above secret should match the one mentioned in the ```system_id``` section of the acc-provision input file. In all other cases, the ```systemid``` can be set to a relevant name that establishes an identity for this cluster (hyphen is not permitted in the name per ACI convention).
 
-* In the Kubernetes case: 
-```
-10.96.0.1,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
-```
+* If the HTTP proxy is set, the following need to be added to the no-proxy configuration:
 
-* In the OpenShift case: 
-```
-oauth-openshift.apps.<based-domain-from-install-config-yaml>.local,console-openshift-console.apps.<based-domain-from-install-config-yaml>.local,downloads-openshift-console.apps.<based-domain-from-install-config-yaml>.local,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
-```
+    * In the Kubernetes case: 
+    ```
+    10.96.0.1,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
+    ```
 
-* In the Calico CNI case:
-In addition to the above, add ```.calico-apiserver.svc```
+    * In the OpenShift case: 
+    ```
+    oauth-openshift.apps.<based-domain-from-install-config-yaml>.local,console-openshift-console.apps.<based-domain-from-install-config-yaml>.local,downloads-openshift-console.apps.<based-domain-from-install-config-yaml>.local,localhost,127.0.0.1,172.30.0.1,172.30.0.10,<node-IPs>,<node-host-names>,<any-other-IPs-which-need-to-be-added>
+    ```
 
-For ACI-CNI, in case if importing a cluster which has a functioning CNI, the system-id is corresponds to the one mentioned in the acc-provision input file. For all other cases, you can chose a name to assign an identity to this cluster.
+    * In the Calico CNI case:\
+    In addition to the above, add ```.calico-apiserver.svc```
 
 #### 3.2.2 Deploy Manifests
 
@@ -257,7 +263,7 @@ kubectl create -f https://raw.githubusercontent.com/noironetworks/netop-manifest
 ### 4.1 Workflows
 
 #### 4.1.1 Fabric Onboarding
-Each network infrasructure unit (referred to as a fabric), and that is managed as an independent entity, is modeled in CKO using the FabricInfra CRD. The network admin creates a FabricInfra CR to establish the identity of the of that fabric, and allows the network admin to specify the set of resources available to be consumed on that fabric. CKO reserves these resources in the FabricInfra on the cluster's behalf, and performs the necessary provisioning on the fabric to enable the networking for the cluster.
+Each network infrasructure unit (referred to as a fabric) that is managed as an independent entity, is modeled in CKO using the FabricInfra CRD. The network admin creates a FabricInfra CR to establish the identity of the of that fabric, and allows the network admin to specify the set of resources available to be consumed on that fabric. CKO reserves these resources in the FabricInfra on the cluster's behalf, and performs the necessary provisioning on the fabric to enable the networking for the cluster.
 
 ##### 4.1.1.1 Fabric Identity
 The following fields are required when creating the FabricInfra:
@@ -273,7 +279,7 @@ The following fields are required when creating the FabricInfra:
   infra_vlan: <infra-vlan-value>
 ```
 
-The secretRef property refers to a secret which needs to be created with the referenced name as follows:
+The secretRef property refers to a Kubernetes Secret for the APIC username and password. It can be created as follows (note that the name of the Secret should match that in the secretRef, in this case the name is ```apic-credentials```):
 
 ```bash
 kubectl create secret -n netop-manager generic apic-credentials --from-literal=username=<APIC_USERNAME> --from-literal=password=<APIC_PASSWORD>
@@ -321,7 +327,7 @@ If fabric resources are being allocated from the FabricInfra pools, at least two
 
 CKO will automatically pick available resources from resource pools. Resources are picked in round-robin fashion. CKO currently does not partition the subnets, so each subnet specified in the resource pool is treated as an indivisible pool. If smaller subnets are desired, they should be listed as individual subnets.
 
-Note: The pod subnet is not picked from the pool since its local to a cluster. It defaults to 10.2.0.0/16 and can be overridden in the ClusterProfile, or ClusterGroupProfile, or ClusterNetworkProfile.
+Note: The pod subnet is not picked from the pool since its local to a cluster. It defaults to ```10.2.0.0/16``` and can be overridden in the ClusterProfile, or ClusterGroupProfile, or ClusterNetworkProfile.
 
 ##### 4.1.1.3.2 External Connectivity
 The kubernetes_node-to-fabric and fabric-to-external connectivity on each fabric is encapsulated in the context property of the FabricInfra. For example in the case of the ACI fabric, the following example shows the context and its constituent properties:
@@ -441,13 +447,13 @@ status:
 
 The complete API spec for the FabricInfra can be found here: [CRD](docs/control-cluster/api_docs.md#fabricinfra)
 
-An exmaple of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
+An example of the FabricInfra CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/fabricinfra.yaml)
 
 #### 4.1.2 Brownfield Clusters
 Existing clusters with a functional CNI provisioned with acc-provision flavors for release 5.2.3.4 can be imported into CKO. The imported cluster starts off with its CNI in an observed, but unmanaged, state by CKO. After succesfully importing the cluster, the CNI can be transitioned to a managed state after which the CNI's configuration and lifecycle can be completely controlled from the Control Cluster.
 
 ##### 4.1.2.1 Unmanaged CNI
-Pre-requisite: The network admin has on-boarded the fabric by creating a FabricInfra CR.
+Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity).
 
 This worfklow is initiated in the cluster which needs to be imported.
 
@@ -463,9 +469,9 @@ Once applied, the notification to import the cluster will be sent to the Control
 The status of the imported cluster can now be tracked in the Control Cluster. 
 
 ##### 4.1.2.2 Managed CNI
-Pre-requisite: A cluster with an associated ClusterProfile is present. 
+Pre-requisite: A cluster with an associated ClusterProfile is present (this will have happened if the import workflow was successful as described in the [previous section](#4121-unmanaged-cni)). 
 
-Change the following in the ClusterProfile:
+Change the following in the relevant ClusterProfile:
 
 ```bash
 ...
@@ -487,11 +493,9 @@ to:
 This will trigger the workflow on the workload cluster once Argo CD syncs, such that the installed CNI will be managed by the Control Cluster.
 
 #### 4.1.3 Greenfield Clusters
-Pre-requisite: The network admin has on-boarded the fabric by creating a FabricInfra CR.
+Pre-requisite: The network admin has on-boarded the fabric by creating a [FabricInfra CR](#4111-fabric-identity). In addition, depending on the CNI that is intended to be deployed, additional FabricInfra configuration may be required as indicated in the section [Fabric Resources for Greenfield Clusters](#4113-fabric-resources-for-greenfield-clusters).
 
-Unlike in the brownfield case, this workflow starts in the Control Cluster.
-
-The user creates a simple ClusterProfile with CNI choice.
+The user then creates a simple ClusterProfile and specifies the CNI.
 
 For ACI-CNI:
 ```bash
@@ -565,7 +569,7 @@ The ClusterProfile API also allows to specify all the configurable details with 
 
 The complete API spec for the ClusterProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clusterprofile)
 
-An exmaple of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
+An example of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
 
 Once the ClusterProfile CR is created successfully, the focus shifts to the Workload Cluster to deploy CKO operator by following these [instructions](#32-workload-cluster). This will result in CKO running in the Workload Cluster and which will in turn deploy the CNI.
 
@@ -579,7 +583,7 @@ Also updates to properties such as CNI management modes (managed versus unmanage
 
 The complete API spec for the ClusterGroupProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clustergroupprofile)
 
-An exmaple of the ClusterGroupProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clustergroupprofile_aci.yaml)
+An example of the ClusterGroupProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clustergroupprofile_aci.yaml)
 
 #### 4.1.5 Managing Clusters Individually
 
@@ -587,7 +591,7 @@ Create ClusterNetworkProfile ConfigMap with all the specific desired properties 
 
 Create ClusterProfile for cluster, set ClusterNetworkProfileSelector to match ClusterNetworkProfile's labels.
 
-An exmaple of the ClusterNetworkProfile ConfigMap can be found here: [Example CR](config/samples/aci-cni/kubernetes/config_maps.yaml)
+An example of the ClusterNetworkProfile ConfigMap can be found here: [Example CR](config/samples/aci-cni/kubernetes/config_maps.yaml)
 
 #### 4.1.6 Customizing Default Behaviors
 * ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
