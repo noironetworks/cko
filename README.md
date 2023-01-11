@@ -812,17 +812,17 @@ Events:                 <none>
 
 #### 5.2.3 Connectivity Checker and Error Pods Reporting
 
-*Connectivity Checker* is a tool that constatly verifies and reports various connectivity paths like:
+*Connectivity Checker* is a tool that constantly verifies and reports various connectivity paths like:
 - node to External
-- node to LB_VIP
+- node to Loadbalancer VIP
 - node to NodePort
-- node to clusterIP
+- node to ClusterIP
 - node to node
 - node to pod
 - pod to External
-- pod to LB_VIP
+- pod to Loadbalancer VIP
 - pod to NodePort
-- pod to clusterIP
+- pod to ClusterIP
 - pod to node
 - pod to pod
 - pod to service
