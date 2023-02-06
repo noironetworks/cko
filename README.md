@@ -130,6 +130,24 @@ CKO requires one Control Cluster to be deployed with the CKO operators before an
 ### 3.1 Control Cluster
 This section describes the setup of the Control Cluster that manages the Workload Clusters.
 
+A new Control Cluster can be deployed using [this script](scripts/install-control-cluster.sh):
+
+```bash
+./install-control-cluster.sh \
+--repo <git-repo-URL> \
+--branch <git-branch> \
+--dir <top-level-dir-name> \
+--github_pat <PAT> \
+--git_user <git-username> \
+--git_email <git-user-email> \
+--http_proxy <http://example.proxy.com:port> \
+--https_proxy <http://example.proxy.com:port> \
+--no_proxy <localhost,127.0.0.1>
+
+The Git repo is used by CKO to store configuration and status information. The http_proxy, https_proxy and no_proxy are optional arguments and need to be supplied if the host on which you are deploying the Control Cluster requires a proxy to connect to the Internet.
+
+The following subsections describe the individual steps to install the Control Cluster if customizations are desired in the Control Cluster installation. If the Control Cluster is already deployed using the above script, please skip the following subsections and proceed to the [Workload Cluster](#32-workload-cluster).
+
 #### 3.1.1 Prequisites
 * A functional Kubernetes cluster with reachability to the ACI Fabric that will serve as the Control Cluster. A single node cluster is adequate, refer to [Appendix](#single-node-control-cluster) for a quick guide on how to set up one.
 * kubectl
