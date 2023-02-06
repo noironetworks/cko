@@ -143,6 +143,7 @@ A new Control Cluster can be deployed using [this script](scripts/install-contro
 --http_proxy <http://example.proxy.com:port> \
 --https_proxy <http://example.proxy.com:port> \
 --no_proxy <localhost,127.0.0.1>
+```
 
 The Git repo is used by CKO to store configuration and status information. The http_proxy, https_proxy and no_proxy are optional arguments and need to be supplied if the host on which you are deploying the Control Cluster requires a proxy to connect to the Internet.
 
