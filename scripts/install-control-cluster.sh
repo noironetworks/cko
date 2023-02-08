@@ -1,14 +1,13 @@
 #!/bin/env bash
+echo "Enter password for sudo"
 
-echo "CKO Control Cluster Install"
+sudo -E echo "CKO Control Cluster Install"
 
-sudo -E echo "Enter password for sudo"
-
-set -xe
+set -e
 
 # Usage:
-# ./deploy_cko_on_kind.sh --repo https://github.com/test/example372 --dir demo-cluster-372 --branch test372 --github_pat dfkjdsanfknjsdakfndsafck372372372372ajsnflnas --git_user networkoperator-gittest372 --git_email test372@cisco.com --system_id sysID372 --http_proxy http://example.proxy.com:port --https_proxy http://example.proxy.com:port --no_proxy localhost,127.0.0.1
-# ./deploy_cko_on_kind.sh -r https://github.com/cisco/example -d demo-cluster -b test -p dfkjdsanfknjsdakfndsafck372372372372ajsnflnas -u networkoperator-gittest -e test@cisco.com -s sysID -hp http://example.proxy.com:port -hsp http://example.proxy.com:port -np localhost,127.0.0.1
+# ./deploy_cko_on_kind.sh --repo https://github.com/test/example --dir demo-cluster --branch test --github_pat dfkjdsanfknjsdakfndsafcajsnflnas --git_user networkoperator-gittest --git_email test@cisco.com  --http_proxy http://example.proxy.com:port --https_proxy http://example.proxy.com:port --no_proxy localhost,127.0.0.1
+# ./deploy_cko_on_kind.sh -r https://github.com/cisco/example -d demo-cluster -b test -p dfkjdsanfknjsdakfndsafck372372372372ajsnflnas -u networkoperator-gittest -e test@cisco.com -hp http://example.proxy.com:port -hsp http://example.proxy.com:port -np localhost,127.0.0.1
 
 
 # Defaults
@@ -18,7 +17,6 @@ BRANCH_NAME="main"
 GITHUB_PAT="dfk_gbjdsanfknjsdakfndsafckajsnflnas"
 GIT_USER="networkoperatorgit"
 GIT_EMAIL="test@cisco.com"
-SYSTEM_ID="sysID"
 #HTTP_PROXY=http://example.proxy.com:port
 #HTTPS_PROXY=http://example.proxy.com:port
 #NO_PROXY=<no-proxy>
@@ -58,11 +56,6 @@ do
     shift # past argument
     shift # past value
     ;;
-    -s|--system_id)
-    SYSTEM_ID="$2"
-    shift # past argument
-    shift # past value
-    ;;
     -hp|--http_proxy)
     HTTP_PROXY="$2"
     shift # past argument
@@ -99,15 +92,9 @@ check_proxy_vars() {
   fi
 }
 
-if check_proxy_vars; then
-   export http_proxy=$HTTP_PROXY
-   export https_proxy=$HTTPS_PROXY
-   export no_proxy=$api_server,$pod_cidr,$NO_PROXY
-fi
-
 
 check_secret_vars() {
-  if [ -n "$REPO" ] || [ -n "$DIR" ] || [ -n "$BRANCH_NAME" ] || [ -n "$GITHUB_PAT" ] || [ -n "$GIT_USER" ] || [ -n "$GIT_EMAIL" ] | [ -n "$SYSTEM_ID" ]; then
+  if [ -n "$REPO" ] || [ -n "$DIR" ] || [ -n "$BRANCH_NAME" ] || [ -n "$GITHUB_PAT" ] || [ -n "$GIT_USER" ] || [ -n "$GIT_EMAIL" ]; then
     return 0 # true
   else
     echo "some or all env variables required to configure cko resources are missing"
@@ -204,18 +191,27 @@ kubernetes-dashboard:
   rbac:
     clusterReadOnlyRole: true"
 
+set -x
+
+# Update Proxy if required
+if check_proxy_vars; then
+   echo "Setting Proxy"
+   export http_proxy=$HTTP_PROXY
+   export https_proxy=$HTTPS_PROXY
+   export no_proxy=$api_server,$pod_cidr,$NO_PROXY
+fi
+
 # Update packages
-echo "Update Ubuntu ..."
+echo "Updating Ubuntu..."
 # sudo -E apt-get autoremove --purge
 sudo -E apt-get -y update
 
 # Install general dependencies
-echo "Install required general dependencies ..."
+echo "Install required general dependencies(apt-transport-https ca-certificates curl gnupg2 lsb-release jq iptables software-properties-common)"
 if ! sudo -E apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release jq iptables software-properties-common; then
     echo "Error: Failed to install general dependencies"
     exit 1
 fi
-
 echo "Done"
 
 #Step 3: Ensure swap is disabled
@@ -224,7 +220,6 @@ sudo -E swapoff -a
 sudo -E systemctl disable --now ufw
 sudo -E modprobe br_netfilter
 sudo -E sysctl -p /etc/sysctl.conf
-
 echo "Done"
 
 # Step 3: Install docker
@@ -342,18 +337,23 @@ echo "Done"
 
 echo "Completed single node cluster setup"
 
+set +x
 
 # Step 10: Install cko control cluster
 echo "Installing CKO"
 
 if check_secret_vars; then
+    echo "Creating cert-manager resources via helm chart"
     sudo -E helm repo add jetstack https://charts.jetstack.io
     sudo -E helm repo update
     if ! sudo -E helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.10.0 --set installCRDs=true --wait; then
       echo "Helm timed out waiting for condition. Please check if cert-manager resources are running"
     fi
-
+    
+    echo "Creating 'netop-manager' namespace"
     kubectl create ns netop-manager
+
+    echo "Creating control cluster secrets"
 
     kubectl create secret generic cko-config -n netop-manager \
     --from-literal=repo=$REPO \
@@ -362,7 +362,6 @@ if check_secret_vars; then
     --from-literal=token=$GITHUB_PAT \
     --from-literal=user=$GIT_USER \
     --from-literal=email=$GIT_EMAIL \
-    --from-literal=systemid=$SYSTEM_ID \
     --from-literal=http_proxy=$HTTP_PROXY \
     --from-literal=https_proxy=$HTTPS_PROXY \
     --from-literal=no_proxy=$NO_PROXY,10.96.0.1,.netop-manager.svc,.svc,.cluster.local,localhost,127.0.0.1,10.96.0.0/16,10.244.0.0/16,control-cluster-control-plane,.svc,.svc.cluster,.svc.cluster.local
@@ -376,16 +375,17 @@ if check_secret_vars; then
 
     kubectl label secret cko-argo -n netop-manager 'argocd.argoproj.io/secret-type'=repository
 
+    echo "Creating netop-manager resources via helm chart"
     sudo -E helm repo add cko https://noironetworks.github.io/netop-helm
     sudo -E helm repo update
     
     # Write values.yaml
-    echo "$values_yaml" | sudo -E tee values.yaml
+    echo "$values_yaml" | sudo -E tee values.yaml > /dev/null
     if ! sudo -E helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f $(pwd)/values.yaml --wait; then
      echo "Helm timed out waiting for condition. Please check that netop-org-manager resources are running"
     fi
 else
-    echo "some or all required variables to configure cko resources are missing"
+    echo "Error: Some or all required variables to configure cko resources are missing"
 fi
 
-echo "You can now use your cluster with:\n\nkubectl cluster-info --context kind-control-cluster\n\n"
+printf "\n\nYou can now use your cluster with:\n\nkubectl cluster-info --context kind-control-cluster\n\n"
