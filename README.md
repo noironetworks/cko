@@ -44,6 +44,7 @@ Cisco Kubernetes Operator (CKO) - An Operator for managing networking for Kubern
   - [5.1 Diagnostics on the Control Cluster](#51-diagnostics-on-the-control-cluster)
   - [5.2 Diagnosticson on the Workload Clusters](#52-diagnostics-on-the-workload-cluster)
 - [6. Troubleshooting](#6-troubleshooting)
+  - [6.1 Brownfield case](#61-brownfield-case)
 - [7. Contributing](#7-contributing)
   - [7.1 Repositories](#71-repositories)
   - [7.2 Contributing to CKO](#72-contributing-to-cko)
@@ -862,26 +863,37 @@ It collects outputs from various fields like events and logs and displays in sin
 
 ## 6. Troubleshooting
 
-For Brownfield case:
-Following notifications are required from workload cluster to initiate cluster profile creation.
+### 6.1 Brownfield case
+Following notifications are required from workload cluster to initiate cluster profile creation.Note that brownfield is only supported where the corresponding CNI is supported through acc-provision.
 
-Observedops:
-Type should be aci-cni to initiate the process.
+#### 6.1.1 CNI neutral notifications required for all CNI
+
+* Observedops:
+<cluster-name>-netop-manager-system-discovery-agent-network-function-netop-manager-io-v1alpha1: Type should be corresponding CNI (eg. cko-cni-aci, cko-cni-calico) for a brownfield clusterprofile of corresponding CNI.
  
-Canary Installer:
-This is only a notification and will be active only as long as there is no installer with CNI spec available on the workload cluster. Type should be aci-cni to initiate the process.
+* Canary Installer:
+<cluster-name>-netop-manager-system-canary-installer-controller-netop-manager-io-v1alpha1: There is no origin resource for this notification and it will be active only as long as there is no installer with CNI spec available on the workload cluster. This is required for a brownfield auto cluster profile creation.
+
+* Configmaps: 
+<cluster-name>-aci-containers-system-acc-provision-config-configmap-core-v1: All of the fields here are important.
+
+#### 6.1.2 ACI-CNI
  
-Configmaps:
-Acc-provision config: All of the fields here are important.
+* Configmaps:
+<cluster-name>-aci-containers-system-aci-operator-config-configmap-core-v1: Flavor field is important here to reconstruct acc-provision input.
+
+* Secrets:
+<cluster-name>-aci-containers-system-aci-user-cert-secret-core-v1: The authorized user secret created while originally provisioning workload cluster is synced to avoid disruption.  
+
+#### 6.1.3 Calico
+No additional requirements.
  
-Aci-operator-config: Flavor field is important here to reconstruct acc-provision input.
- 
-Once all these notifications are available, the ClusterProfile and ClusterNetworkProfile will be automatically created:
+Once corresponding notifications are available, the ClusterProfile and ClusterNetworkProfile will be automatically created:
 
 ```auto-<clustername>``` - [ClusterProfile](config/samples/aci-cni/kubernetes/imported/auto-clusterprofile.yaml)
 
 ```auto-<clustername>``` - [ClusterNetworkProfile](config/samples/aci-cni/kubernetes/imported/auto-clusternetworkprofile.yaml)
- 
+
 
 ## 7. Contributing
 
