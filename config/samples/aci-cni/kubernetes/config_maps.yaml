@@ -40,7 +40,7 @@ data:
         tenant: common
     registry:
       image_prefix: quay.io/cko
-      network_operator_version: 0.9.0.d04f56f
+      network_operator_version: 0.9.1.d04f56f
     net_config:
       node_subnet: 1.100.101.1/24
       pod_subnet: 10.6.0.1/16

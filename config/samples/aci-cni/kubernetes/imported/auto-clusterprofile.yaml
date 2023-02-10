@@ -92,7 +92,7 @@ status:
   node_vlan: 101
   operator_config:
     mode: unmanaged
-    version: 0.9.0
+    version: 0.9.1
   pod_subnet: 2.100.101.1/16
   ready: true
   vlans:

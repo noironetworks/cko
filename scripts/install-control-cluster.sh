@@ -128,14 +128,14 @@ image:
   repository: quay.io/ckodev/netop-org-manager
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: \"0.9.0.d04f56f\"
+  tag: \"0.9.1.d04f56f\"
 
 ## -- Specifies image details for netop-farbic-manager
 fabricManagerImage:
   repository: quay.io/ckodev/netop-fabric-manager
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: \"0.9.0.d04f56f\"
+  tag: \"0.9.1.d04f56f\"
 
 imagePullSecrets: []
 nameOverride: \"\"
@@ -381,7 +381,7 @@ if check_secret_vars; then
     
     # Write values.yaml
     echo "$values_yaml" | sudo -E tee values.yaml
-    if ! sudo -E helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.0 -f $(pwd)/values.yaml --wait; then
+    if ! sudo -E helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f $(pwd)/values.yaml --wait; then
      echo "Helm timed out waiting for condition. Please check that netop-org-manager resources are running"
     fi
 else
