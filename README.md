@@ -670,9 +670,14 @@ Update CKO version in ClusterProfile by changing the following:
 To avoid accidentally breaking the Workload Cluster, deletion of CKO and/or the CNI is an explicit step. Please refer to the cleanup instructions in the [Appendix](#cko-cleanup-in-workload-cluster) to initiate this cleanup. The ClusterProfile should be deleted only after the cleanup has been performed on the Workload Cluster. The configuration on the Fabric for this cluster is cleaned up after the ClusterProfile is deleted.
 
 #### 4.1.10 Upgrade Control Cluster
-
+To upgrade from 0.9.0 release to 0.9.1 use the following helm upgrade command using the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml```:
 ```bash
-	helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace \
+        helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f my_values.yaml --wait
+```
+
+In the dev environment, the following command can be used to upgrade or install using custom built images and other custom options.
+```bash
+	helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version ${CHART_VERSION} \
 	--set image.tag=${VERSION} --set image.repository=${IMAGE_TAG_BASE} \
 	--set fabricManagerImage.repository=quay.io/ckodev/netop-fabric-manager \
 	--set image.pullPolicy=IfNotPresent
