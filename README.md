@@ -203,7 +203,7 @@ Use the template provided in the [Appendix](#control-cluster-install-configurati
 
 helm repo add cko https://noironetworks.github.io/netop-helm
 helm repo update
-helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.0 -f my_values.yaml --wait
+helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f my_values.yaml --wait
 ```
 
 Argo CD is automatically deployed in the Control Cluster (in the netop-manager namespace) and in the Workload Cluster (in the netop-manager-system namespace). By default Argo CD starts reconciliation with the git repository every [180s](https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml#L283). The reconciliation time depends on the number of objects being synchronized and can potentially take longer at times. If more frequent synchronization is required you can follow the process described [here](https://www.buchatech.com/2022/08/how-to-set-the-application-reconciliation-timeout-in-argo-cd/) to reduce time interval between the reconciliation start times.
@@ -997,7 +997,7 @@ kubectl version --client"
 Install Helm using [these](https://helm.sh/docs/intro/install/) istructions.
 
 ### Control Cluster Install Configuration
-Use the following ```my_values.yaml``` when installing the CKO Helm Chart for the Control Cluster for release 0.9.0:
+Use the following ```my_values.yaml``` when installing the CKO Helm Chart for the Control Cluster for release 0.9.1:
 
 ``` bash
 
@@ -1012,14 +1012,14 @@ image:
   repository: quay.io/ckodev/netop-org-manager
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.0.d04f56f"
+  tag: "0.9.1.d04f56f"
 
 ## -- Specifies image details for netop-farbic-manager
 fabricManagerImage:
   repository: quay.io/ckodev/netop-fabric-manager
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.0.d04f56f"
+  tag: "0.9.1.d04f56f"
 
 imagePullSecrets: []
 nameOverride: ""

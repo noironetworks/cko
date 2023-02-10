@@ -7,7 +7,7 @@ data:
         aep: bm-srvrs-calico-aep
     registry:
       image_prefix: quay.io/cko
-      network_operator_version: 0.9.0.d04f56f
+      network_operator_version: 0.9.1.d04f56f
     aci_config:
       cluster_l3out:
         aep: bm-srvrs-calico-aep
