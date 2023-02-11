@@ -913,13 +913,13 @@ Once corresponding notifications are available, the ClusterProfile and ClusterNe
 
 * Notification Types: [netop-types](https://github.com/noironetworks/netop-types)
 
-* Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision)
+* Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision/tree/cko-mvp-1)
 
 * Connectivity Checker: [nettools](https://github.com/noironetworks/nettools)
 
-* System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/commits/cko-mvp-1)
+* System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/tree/cko-mvp-1)
 
-* Control Cluster Helm Chart: [netop-helm](https://github.com/noironetworks/netop-helm)
+* Control Cluster Helm Chart: [netop-helm](https://github.com/noironetworks/netop-helm/releases)
 
 * Workload Cluster Manifests: [netop-manifests](https://github.com/noironetworks/netop-manifests)
 
