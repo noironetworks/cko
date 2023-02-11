@@ -898,25 +898,25 @@ Once corresponding notifications are available, the ClusterProfile and ClusterNe
 ## 7. Contributing
 
 ### 7.1 Repositories
-* Org Operator: [netop-org-manager](https://github.com/noironetworks/netop-org-manager)
+* Org Operator: [netop-org-manager](https://github.com/noironetworks/netop-org-manager/tree/stable/0.9.0)
 
-* Fabric Operator: [netop-fabric-manager](https://github.com/noironetworks/netop-fabric-manager)
+* Fabric Operator: [netop-fabric-manager](https://github.com/noironetworks/netop-fabric-manager/tree/stable/0.9.0)
 
-* Workload Cluster Operator: [netop-manager](https://github.com/noironetworks/netop-manager)
+* Workload Cluster Operator: [netop-manager](https://github.com/noironetworks/netop-manager/tree/stable/0.9.0)
 
-* Notification Types: [netop-types](https://github.com/noironetworks/netop-types)
+* Notification Types: [netop-types](https://github.com/noironetworks/netop-types/tree/stable/0.9.0)
 
-* Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision)
+* Manifest Generation: [acc-provision](https://github.com/noironetworks/acc-provision/tree/stable/0.9.0)
 
-* Connectivity Checker: [nettools](https://github.com/noironetworks/nettools)
+* Connectivity Checker: [nettools](https://github.com/noironetworks/nettools/tree/stable/0.9.0)
 
-* System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/commits/cko-mvp-1)
+* System Tests: [acc-pytests](https://github.com/noironetworks/acc-pytests/tree/stable/0.9.0)
 
-* Control Cluster Helm Chart: [netop-helm](https://github.com/noironetworks/netop-helm)
+* Control Cluster Helm Chart: [netop-helm](https://github.com/noironetworks/netop-helm/releases)
 
-* Workload Cluster Manifests: [netop-manifests](https://github.com/noironetworks/netop-manifests)
+* Workload Cluster Manifests: [netop-manifests](https://github.com/noironetworks/netop-manifests/tree/stable/0.9.0)
 
-* User Documentation: [cko](https://github.com/noironetworks/cko)
+* User Documentation: [cko](https://github.com/noironetworks/cko/tree/stable/0.9.0)
 
 ### 7.2 Contributing to CKO
 
