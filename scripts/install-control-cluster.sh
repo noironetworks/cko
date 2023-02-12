@@ -1,22 +1,22 @@
 #!/bin/env bash
-echo "Enter password for sudo"
+echo "CKO Control Cluster Install"
 
-sudo -E echo "CKO Control Cluster Install"
+sudo -E printf "\n"
 
 set -e
 
 # Usage:
-# ./deploy_cko_on_kind.sh --repo https://github.com/test/example --dir demo-cluster --branch test --github_pat dfkjdsanfknjsdakfndsafcajsnflnas --git_user networkoperator-gittest --git_email test@cisco.com  --http_proxy http://example.proxy.com:port --https_proxy http://example.proxy.com:port --no_proxy localhost,127.0.0.1
-# ./deploy_cko_on_kind.sh -r https://github.com/cisco/example -d demo-cluster -b test -p dfkjdsanfknjsdakfndsafck372372372372ajsnflnas -u networkoperator-gittest -e test@cisco.com -hp http://example.proxy.com:port -hsp http://example.proxy.com:port -np localhost,127.0.0.1
+# ./deploy_cko_on_kind.sh --repo https://github.com/test/example --dir mydir --branch mybranch --github_pat mypat --git_user myuser --git_email myemail@example.com  --http_proxy http://example.proxy.com:port --https_proxy http://example.proxy.com:port --no_proxy localhost,127.0.0.1
+# ./deploy_cko_on_kind.sh -r https://github.com/test/example -d mydir -b mybranch -p mypat -u myuser -e myemail@cisco.com -hp http://example.proxy.com:port -hsp http://example.proxy.com:port -np localhost,127.0.0.1
 
 
 # Defaults
 REPO="https://github.com/test/example"
-DIR="democluster"
-BRANCH_NAME="main"
-GITHUB_PAT="dfk_gbjdsanfknjsdakfndsafckajsnflnas"
-GIT_USER="networkoperatorgit"
-GIT_EMAIL="test@cisco.com"
+DIR="mydir"
+BRANCH_NAME="mybranch"
+GITHUB_PAT="mypat"
+GIT_USER="myuser"
+GIT_EMAIL="myemail@example.com"
 #HTTP_PROXY=http://example.proxy.com:port
 #HTTPS_PROXY=http://example.proxy.com:port
 #NO_PROXY=<no-proxy>
@@ -82,6 +82,11 @@ done
 pod_cidr=10.244.0.0/16
 api_server=$(ip addr show | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | tr '\n' ',' | sed 's/,$//')
 HOSTNAME=$(hostname)
+
+set -T
+
+trap '! [[ "$BASH_COMMAND" =~ ^(echo|printf|check_proxy_vars) ]] &&
+      printf "+ %s\n" "$BASH_COMMAND"' DEBUG
 
 # Set proxy
 check_proxy_vars() {
@@ -190,8 +195,6 @@ kubernetes-dashboard:
   enabled: true
   rbac:
     clusterReadOnlyRole: true"
-
-set -x
 
 # Update Proxy if required
 if check_proxy_vars; then
@@ -388,4 +391,4 @@ else
     echo "Error: Some or all required variables to configure cko resources are missing"
 fi
 
-printf "\n\nYou can now use your cluster with:\n\nkubectl cluster-info --context kind-control-cluster\n\n"
+printf "\nControl Cluster with CKO install complete, you can now use your cluster with:\nkubectl cluster-info --context kind-control-cluster\n"
