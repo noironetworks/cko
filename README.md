@@ -106,7 +106,7 @@ This release includes the following features:
 This release has support for:
 
 * ACI Fabric 5.2
-* ACI-CNI 5.2.3.4
+* ACI-CNI 5.2.3.5
 * Calico CNI with Tigera Operator 3.23
 * OCP 4.10
 * Kubernetes 1.22, 1.23, 1.24
