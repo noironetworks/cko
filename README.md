@@ -672,7 +672,11 @@ To avoid accidentally breaking the Workload Cluster, deletion of CKO and/or the 
 #### 4.1.10 Upgrade Control Cluster
 To upgrade from 0.9.0 release to 0.9.1 use the following helm upgrade command using the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml```:
 ```bash
-        helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f my_values.yaml --wait
+  helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f my_values.yaml --wait
+```
+To upgrade the CRDs use the following commaind:
+```bash
+  kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests/cko-mvp-1/control/netop-org-manager-crd.yaml     
 ```
 
 In the dev environment, the following command can be used to upgrade or install using custom built images and other custom options.
