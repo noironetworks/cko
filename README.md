@@ -679,7 +679,7 @@ To upgrade the CRDs use the following commaind:
   kubectl apply -f https://raw.githubusercontent.com/noironetworks/netop-manifests/cko-mvp-1/control/netop-org-manager-crd.yaml     
 ```
 
-In the dev environment, the following command can be used to upgrade or install using custom built images and other custom options.
+As an alternative to the above helm command, in the dev environment, the following command can be used to upgrade or install using custom built images and other custom options.
 ```bash
 	helm upgrade --install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version ${CHART_VERSION} \
 	--set image.tag=${VERSION} --set image.repository=${IMAGE_TAG_BASE} \
