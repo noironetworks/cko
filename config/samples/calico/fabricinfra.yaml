@@ -1,61 +1,61 @@
 apiVersion: netop.mgr/v1alpha1
 kind: FabricInfra
 metadata:
-  name: k8s-bm-2
-  namespace: netop-manager
+  name: aci-fab-01                    # FabricInfra name should clearly describe name of your ACI fabric.
+  namespace: netop-manager            # Must be "netop-manager".
   labels:
-    fabric: on-prem-dev-infra
-    site: bldg-15-lab
+    fabric: aci-fab-01                # meaningful labels to clearly describe fabric name, fabric, site are mandatory. You can put more labels if needed. Those will be matched by clusterGroupProfile or ClusterNetworkProfile
+    site: az01                 
 spec:
   credentials:
     hosts:
-    - 10.10.10.10
+    - apic_ip_1
+    - apic_ip_2
+    - apic_ip_3
     secretRef:
-      name: apic-credentials
-      username: username
-      password: password
-  fabric_type: aci
-  infra_vlan: 4093
-  mcast_subnets:
-    - 225.114.0.0/16
+      name: apic-credentials          # name of the secret that contains username and password keywords.
+  fabric_type: aci                    # fabric type for now "aci" is the only supported. 
+  infra_vlan: 4093                    # optional, infra VLAN can be discovered by fabricInfra operator.
+  mcast_subnets:                      # multicast subnets are only required for ACI CNI. Specify pool of multicast subnets for BUM traffic between K8s/OCP nodes and ACI Leafs. 
+    - 225.114.0.0/16                  # Each workload cluster require one subnet
     - 225.115.0.0/16
-  internal_subnets:
-    - 1.100.101.1/16
-    - 2.100.101.1/16
-    - 10.5.0.1/16
-    - 10.6.0.1/16
-    - 20.2.0.1/16
-    - 20.5.0.1/16
-  external_subnets:
-    - 10.3.0.1/16
-    - 10.4.0.1/16
-    - 20.3.0.1/16
-    - 20.4.0.1/16
-  vlans:
+  internal_subnets:                   # list of available subnets to be assigned for node network and PBR services (aci cni only). Default for POD (10.2.0.0/16) and Service Network (clusterIP) - 10.96.0.0/12. 
+    - 1.100.101.0/16                  # if POD or ClusterIP subnet range needs to be specified, it can be done in config_overrides in clusterProfile or clusterGroupProfile
+    - 2.100.101.0/16
+    - 10.5.0.0/16
+    - 10.6.0.0/16
+    - 10.10.0.0/24
+    - 10.10.1.0/24
+  external_subnets:                   # list of available subnets to be assigned for LoadBalancer routeable range for ACI CNI and Calico.
+    - 10.3.0.0/16
+    - 10.4.0.0/16
+    - 20.3.0.0/16
+    - 20.4.0.0/16
+  vlans:                              # list of available VLANs to be assigned for node network, PBR service (aci-cni only)
     - 101
     - 102
     - 103
     - 104
-  contexts:
+  contexts:                           # list of contexts assigned per workload cluster. L3out here must exists before using CKO, this L3out is used for external communication outside of the fabric.
     context-1:
       aep: bm-srvrs-aep
       l3out:
         name: l3out-1
         external_networks:
-        - l3out-1_epg
+        - l3out-1-epg
       vrf:
-        name: l3out-1_vrf
+        name: l3out-1-vrf
         tenant: common
     context-2:
-      aep: bm-srvrs-calico-aep
+      aep: esxi-srvrs-aep
       l3out:
-        name: l3out-3
+        name: l3out-2
         external_networks:
-        - l3out-3_epg
+        - l3out-2-epg
       vrf:
-        name: l3out-3_vrf
+        name: l3out-2-vrf
         tenant: common
-  topology:
+  topology:                          # topology used only for Calico case, it is used to annotate K8s node running Calico routers to peer with the correct ACI Leafs
     rack:
     - id: 1
       aci_pod_id: 1
@@ -73,7 +73,7 @@ spec:
       node:
       - name: k8s-node3
       - name: k8s-node4
-  bgp:
-    remote_as_numbers:
+  bgp:                              
+    remote_as_numbers:              # list of available BGP AS to be assigned to Calico clusters
       - 64512
-    aci_as_number: 2
+    aci_as_number: 65001            # BGP AS used by ACI fabrci (this should be a list also and we should support AS override) 

@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocp-dev-002
+  namespace: netop-manager
+  labels:
+    cni: aci
+    distro: kubernetes
+    environment: dev
+    netProfile: ocp-dev-002
+    platform: esx
+data:
+ clusternetworkprofile_overrides: |
+  config_overrides:                                        # this section supports all overrides that are possible to do in the clusterProfile or clusterGroupProfile
+    aci_cni_config:                                        
+      aci_config:                                          # aci_config section consists of ACI related configuration - Tenant, VRF, L3out, BGP, AEP.
+        aep: esxi-srvrs-aep       
+        vmm_domain:                                        # Kubernetes container domain configuration
+          encap_type: vxlan                                # Encap mode: vxlan or vlan
+          mcast_range:                                     # Every opflex VMM must use a distinct range
+              start: 225.115.1.1
+              end: 225.115.255.255
+          nested_inside:                                   # Include if nested inside a VMM (esxi only)
+            type: vmware                                   # Specify the VMM vendor (supported: vmware)
+            name: prod-dvs-01                              # Specify the name of the VMM domain
+            installer_provisioned_lb_ip: 192.168.58.2      # Mandatory field for Openshift on ESX flavor. Points to the Loadbalancer in front of kube API and Ingress Router (which later can be changed to ACI-CNI load-balancer)
+      logging:
+        controller_log_level: debug
+        hostagent_log_level: debug
+        opflexagent_log_level: debug
+      net_config:                                          # this is specific to aci-cni only 
+        extern_static: 10.10.0.1/24                         # Subnet to use for static external IPs
+        service_vlan: 298                                   # The VLAN used by service graph for LoadBalancer service type
+        node_svc_subnet: 10.11.0.1/24                       # Subnet used by service graph for LoadBalancer service type
+      kube_config:
+        opflex_agent_prometheus: false
+        ovs_memory_limit: 1Gi
+        image_pull_policy: Always
+      l3out:                                               # L3out for external access must exists before applying clusterProfile in CKO.
+        name: dev-001-l3out                                # name of L3out that will provide access to the openshift cluster.
+        external_networks:
+        - internet                                         # name of the external EPG under L3out that will provide contract for external access.
+      vrf:
+        name: dev-001-vrf                                  # vrf name where openshift BD's will be deployed.
+        tenant: common                                     # tenant name where openshift BD's will be deployed. It will be used as System-ID.
+      registry:                                            # registry path for ACI-CNI images with custom tags   
+        image_prefix: quay.io/noirolabs
+        aci_containers_controller_version: 5.2.3.6.1d150da
+        acc_provision_operator_version: 5.2.3.6.1d150da
+        aci_containers_host_version: 5.2.3.6.1d150da
+        aci_containers_operator_version: 5.2.3.6.1d150da
+        cnideploy_version: 5.2.3.6.1d150da
+        opflex_agent_version: 5.2.3.6.1d150da
+        openvswitch_version: 5.2.3.6.1d150da
+    registry:                                              # registry path for netop-manager operator that will be installed in workload cluster
+      image_prefix: quay.io/cko 
+      network_operator_version: 0.9.1.d04f56f
+    net_config:                                            # rest of the openshift subnets configuration. This section is common for Calico and ACI CNI.
+      node_subnet: 192.168.58.1/24                         # Subnet to use for nodes       
+      pod_subnet: 10.2.0.1/16                              # Subnet to use for Kubernetes Pods
+      extern_dynamic: 10.9.0.1/24                          # Subnet to use for dynamic external IPs
+      kubeapi_vlan: 299                                    # The VLAN used by the node network (in case of baremetal deployment)
+    cni: aci                                               # CNI type - for ACI-CNI: "aci", for Calico: "calico"
+    operator_config:
+      target_version: 0.9.1                                # netop-manager operator version that will be running on workload cluster.
+    distro:
+      type: kubernetes                                     # required field to specify exact flavor of the openshift distribution.
+      release: "1.24"                                      # required field to specify exact flavor of the openshift distribution.
+      platform: esx                                        # required field to specify exact flavor of the openshift distribution.
+    cko_proxy_config:                                      # optional proxy configuration for netop-manager operator to access git repo.
+      http_proxy: http://proxy.myorg.com:80
+      https_proxy: http://proxy.myorg.com:80
+      no_proxy: localhost,127.0.0.1
+    fabricinfra:
+      name: aci-fab-02                                     # match name of the fabricInfra resource.
