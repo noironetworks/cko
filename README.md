@@ -602,7 +602,7 @@ The ClusterProfile API also allows to specify all the configurable details with 
 
 The complete API spec for the ClusterProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clusterprofile)
 
-An example of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterprofile_aci.yaml)
+An example of the ClusterProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterGroupProfile/clusterprofile_k8s.yaml)
 
 Once the ClusterProfile CR is created successfully, the focus shifts to the Workload Cluster to deploy CKO operator by following these [instructions](#32-workload-cluster). This will result in CKO running in the Workload Cluster and which will in turn deploy the CNI.
 
@@ -616,15 +616,15 @@ Also updates to properties such as CNI management modes (managed versus unmanage
 
 The complete API spec for the ClusterGroupProfile can be found here: [CRD](docs/control-cluster/api_docs.md#clustergroupprofile)
 
-An example of the ClusterGroupProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clustergroupprofile_aci.yaml)
+An example of the ClusterGroupProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterGroupProfile/clustergroupprofile_k8s.yaml)
 
 #### 4.1.5 Managing Clusters Individually
 
-Create ClusterNetworkProfile ConfigMap with all the specific desired properties for this cluster.
+Create ClusterNetworkProfile CR with all the specific desired properties for this cluster.
 
 Create ClusterProfile for cluster, set ClusterNetworkProfileSelector to match ClusterNetworkProfile's labels.
 
-An example of the ClusterNetworkProfile ConfigMap can be found here: [Example CR](config/samples/aci-cni/kubernetes/config_maps.yaml)
+An example of the ClusterNetworkProfile CR can be found here: [Example CR](config/samples/aci-cni/kubernetes/clusterNetworkProfile/clusternetworkprofile.yaml)
 
 #### 4.1.6 Customizing Default Behaviors
 * ConfigMap for ClusterProfle global default settings: defaults-cluster-profile.yaml
