@@ -1,5 +1,5 @@
-apiVersion: v1
-kind: ConfigMap
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterNetworkProfile
 metadata:
   name: k8s-dev-001                                     # because config map for NetworkProfile is defined per k8s/ocp cluster it can have the same name as clusterProfile.
   namespace: netop-manager
@@ -9,8 +9,7 @@ metadata:
     environment: dev                                    
     netProfile: k8s-dev-001
     platform: baremetal    
-data:
- clusternetworkprofile_overrides: |
+spec:
   config_overrides:                                      # this section supports all overrides that are possible to do in the clusterProfile or clusterGroupProfile
     registry:                    
       image_prefix: quay.io/cko
