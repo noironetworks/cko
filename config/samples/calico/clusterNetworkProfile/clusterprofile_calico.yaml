@@ -1,0 +1,14 @@
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterProfile
+metadata:
+  name: k8s-dev-001                        # name of the workload cluster that will be uniquely identified in CKO control cluster.  
+  namespace: netop-manager
+spec:
+  cluster_network_profile_selector:
+    matchLabels:                           # match labels to select config map with the NetworkProfile.
+      cni: calico
+      distro: kubernetes  
+      environment: dev                 
+      netProfile: k8s-dev-001                                                  
+      platform: baremetal
+  cluster_name: k8s-dev-001                # name will be used as System_ID which is used to create objects in ACI like Username, l3out name.

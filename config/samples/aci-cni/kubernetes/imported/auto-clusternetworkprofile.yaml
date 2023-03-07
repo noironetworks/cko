@@ -1,7 +1,74 @@
-apiVersion: v1
-data:
-  clusternetworkprofile_overrides: '{"config_overrides":{"aci_config":{"system_id":"bm2acicni","l3out":{"name":"sauto_l3out-1","external_networks":["sauto_l3out-1_epg"]},"cluster_l3out":{"svi":{},"bgp":{"peering":{}}},"vrf":{"name":"sauto_l3out-1_vrf","tenant":"common"},"physical_domain":{}},"aci_cni_config":{"aci_config":{"vmm_domain":{"mcast_range":{},"nested_inside":{}},"aep":"bm-srvrs-aep"},"net_config":{"extern_static":"10.4.0.1/16","service_vlan":102,"node_svc_subnet":"10.5.0.1/16"},"registry":{"acc_provision_operator_version":"kmr2-test","aci_containers_operator_version":"kmr2-test","aci_containers_controller_version":"kmr2-test","aci_containers_host_version":"kmr2-test","cnideploy_version":"kmr2-test","opflex_agent_version":"kmr2-test","openvswitch_version":"kmr2-test"},"kube_config":{"image_pull_policy":"Always","operator_managed_config":{},"ovs_memory_limit":"0.75Gi","istio_config":{},"drop_log_config":{},"multus":{},"sriov_config":{},"nodepodif_config":{}},"logging":{"controller_log_level":"debug","hostagent_log_level":"debug","opflexagent_log_level":"debug"}},"net_config":{},"registry":{},"calico_cni_config":{},"profile":{},"service_mesh_config":{},"cko_git_config":{},"monitoring_config":{},"lb_config":{},"cko_proxy_config":{},"topology":{},"context":{"vrf":{},"l3out":{}},"distro":{},"operator_config":{},"connectivity_checker":{"reachability_test_enable":{"periodic_sync":{},"external_url":{}}},"fabricinfra":{"name":"k8s-bm-2","type":"aci"}}}'
-kind: ConfigMap
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterNetworkProfile
+spec:
+  config_overrides:
+    aci_config:
+      system_id: bm2acicni
+      l3out:
+        name: sauto_l3out-1
+        external_networks:
+          - sauto_l3out-1_epg
+      cluster_l3out:
+        svi: {}
+        bgp:
+          peering: {}
+      vrf:
+        name: sauto_l3out-1_vrf
+        tenant: common
+      physical_domain: {}
+    aci_cni_config:
+      aci_config:
+        vmm_domain:
+          mcast_range: {}
+          nested_inside: {}
+        aep: bm-srvrs-aep
+      net_config:
+        extern_static: 10.4.0.1/16
+        service_vlan: 102
+        node_svc_subnet: 10.5.0.1/16
+      registry:
+        acc_provision_operator_version: kmr2-test
+        aci_containers_operator_version: kmr2-test
+        aci_containers_controller_version: kmr2-test
+        aci_containers_host_version: kmr2-test
+        cnideploy_version: kmr2-test
+        opflex_agent_version: kmr2-test
+        openvswitch_version: kmr2-test
+      kube_config:
+        image_pull_policy: Always
+        operator_managed_config: {}
+        ovs_memory_limit: 0.75Gi
+        istio_config: {}
+        drop_log_config: {}
+        multus: {}
+        sriov_config: {}
+        nodepodif_config: {}
+      logging:
+        controller_log_level: debug
+        hostagent_log_level: debug
+        opflexagent_log_level: debug
+    net_config: {}
+    registry: {}
+    calico_cni_config: {}
+    profile: {}
+    service_mesh_config: {}
+    cko_git_config: {}
+    monitoring_config: {}
+    lb_config: {}
+    cko_proxy_config: {}
+    topology: {}
+    context:
+      vrf: {}
+      l3out: {}
+    distro: {}
+    operator_config: {}
+    connectivity_checker:
+      reachability_test_enable:
+        periodic_sync: {}
+        external_url: {}
+    fabricinfra:
+      name: k8s-bm-2
+      type: aci
 metadata:
   annotations:
     notification-controller.netop.mgr/created: "true"

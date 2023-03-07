@@ -2,59 +2,82 @@ apiVersion: netop.mgr/v1alpha1
 kind: FabricInfra
 metadata:
   labels:
-    fabric: 4.2.7f
-    site: BUILDING-15-LAB 
-  name: hyperflex
+    fabric: aci-fab-02
+    site: az02
+  name: aci-fab-02
   namespace: netop-manager
 spec:
   credentials:
     hosts:
     - 10.10.10.10
+    - 10.10.10.11
+    - 10.10.10.12
     secretRef:
       name: apic-credentials
   fabric_type: aci
   infra_vlan: 3901
   mcast_subnets:
+    - 225.90.0.0/16
     - 225.91.0.0/16
+    - 225.92.0.0/16
+    - 225.93.0.0/16   
   internal_subnets:
-    - 10.2.0.1/16
-    - 10.5.0.1/16
-    - 192.168.57.1/24
+    - 10.5.0.0/16
+    - 10.6.0.0/16
+    - 10.7.0.0/16
+    - 10.8.0.0/16
+    - 192.168.50.0/24
+    - 192.168.51.0/24
+    - 192.168.52.0/24
+    - 192.168.53.0/24
   external_subnets:
-    - 10.3.0.1/24
-    - 10.4.0.1/24
+    - 10.11.50.0/24
+    - 10.11.51.0/24
+    - 10.11.52.0/24
+    - 10.11.53.0/24
   vlans:
     - 291
     - 292
+    - 293
+    - 294
+    - 295
+    - 296
+    - 297
+    - 298
   contexts:
     context-1:
-      aep: hypf-aep
+      aep: esx-prod-srvrs-aep
       l3out:
-        name: acc_l3out
+        name: prod-001-l3out
         external_networks:
-        - acc_net
+        - internet
       vrf:
-        name: acc_test
+        name: ocp-prod-001
         tenant: common
-  topology:
-    rack:
-    - id: 1
-      aci_pod_id: 1
-      leaf:
-      - id: 101
-      - id: 102
-      node:
-      - name: k8s-node1
-      - name: k8s-node2
-    - id: 2
-      aci_pod_id: 1
-      leaf:
-      - id: 103
-      - id: 104
-      node:
-      - name: k8s-node3
-      - name: k8s-node4
-  bgp:
-    remote_as_numbers:
-      - 64512
-    aci_as_number: 2
+    context-2:
+      aep: esx-prod-srvrs-aep
+      l3out:
+        name: prod-002-l3out
+        external_networks:
+        - internet
+      vrf:
+        name: ocp-prod-002
+        tenant: common
+    context-3:
+      aep: esx-dev-srvrs-aep
+      l3out:
+        name: dev-001-l3out
+        external_networks:
+        - internet
+      vrf:
+        name: ocp-dev-001
+        tenant: common
+    context-4:
+      aep: esx-dev-srvrs-aep
+      l3out:
+        name: dev-002-l3out
+        external_networks:
+        - internet
+      vrf:
+        name: ocp-dev-002
+        tenant: common

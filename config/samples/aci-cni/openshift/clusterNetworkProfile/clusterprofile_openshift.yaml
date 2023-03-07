@@ -1,0 +1,14 @@
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterProfile
+metadata:
+  name: ocp-dev-001
+  namespace: netop-manager
+spec:
+  cluster_name: ocp-dev-001
+  cluster_network_profile_selector:
+    matchLabels:
+      cni: aci
+      distro: openshift
+      environment: dev
+      netProfile: ocp-dev-001
+      platform: esx

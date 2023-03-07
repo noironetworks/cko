@@ -1,0 +1,42 @@
+apiVersion: netop.mgr/v1alpha1
+kind: ClusterGroupProfile
+metadata:
+  name: k8s-prod-calico-az01                   # meaningful name of the group of workload clusters that will be deployed in the same environment, sharing similar type 
+  namespace: netop-manager                     # must be netop-manager
+  labels: 
+    distro: kubernetes                         # unique labels to distiguish ClusterGroupProfiles among the others.
+    location: az01                             
+    cni: calico                                
+    platform: baremetal
+    environment: prod
+spec:             
+  selector:
+    matchLabels:                               # match labels assigned to FabricInfra
+      fabric : aci-fab-01
+      site: az01
+  config_overrides:                            # whatever customization is needed that is available in NetworkProfile, can be specified here.
+    cni: calico                                # Mandatory cni selector.
+    distro:                                    # (optional) 
+      flavor: calico-3.23.2                    # this will be computed automatically, however once we will add more calico flavors we need to explicitely specify.
+      platform: baremetal                      # this has been computed automatically, Calico for now does not support nested VMM (but this would be possible for floating SVI).
+      type: kubernetes                         # this has been computed automatically, 
+    connectivity_checker:                      # (optional) connectivity check tool to test and report connectivity status.
+      error_pods_reporting_enable: true
+      reachability_test_enable:
+        periodic_sync:
+          enable_updates: true
+          interval: 120
+        external_url:
+          url: 'google.com'
+      reachability_tests:
+        - pod_to_pod
+        - pod_to_node
+        - pod_to_clusterIP
+        - pod_to_service
+        - pod_to_LB_VIP
+        - pod_to_NodePort
+        - pod_to_External
+        - node_to_node
+        - node_to_pod
+        - node_to_clusterIP
+        - node_to_LB_VIP
