@@ -21,7 +21,7 @@ spec:
               end: 225.114.255.255
           nested_inside:                                   # Include if nested inside a VMM (esxi only)
             type: vmware                                   # Specify the VMM vendor (supported: vmware)
-            name: prod-dvs-01                              # Specify the name of the VMM domain
+            name: dev-dvs-01                              # Specify the name of the VMM domain
             installer_provisioned_lb_ip: 192.168.57.2      # Mandatory field for Openshift on ESX flavor. Points to the Loadbalancer in front of kube API and Ingress Router (which later can be changed to ACI-CNI load-balancer)
       logging:
         controller_log_level: debug
@@ -44,10 +44,10 @@ spec:
         opflex_agent_version: 5.2.3.6.1d150da
         openvswitch_version: 5.2.3.6.1d150da
     aci_config:
-      l3out: # L3out for external access must exists before applying clusterProfile in CKO.
+      l3out:                                               # L3out for external access must exists before applying clusterProfile in CKO.
         name: dev-001-l3out                                # name of L3out that will provide access to the openshift cluster.
         external_networks:
-          - internet                                         # name of the external EPG under L3out that will provide contract for external access.
+          - internet                                       # name of the external EPG under L3out that will provide contract for external access.
       vrf:
         name: dev-001-vrf                                  # vrf name where openshift BD's will be deployed.
         tenant: common
