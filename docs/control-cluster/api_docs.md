@@ -9,22 +9,10 @@
 Package v1alpha1 contains API Schema definitions for the netop.mgr v1alpha1 API group
 
 ### Resource Types
-- [ClusterGroupProfile](#clustergroupprofile)
-- [ClusterGroupProfileList](#clustergroupprofilelist)
-- [ClusterInfo](#clusterinfo)
-- [ClusterInfoList](#clusterinfolist)
-- [ClusterNetworkProfile](#clusternetworkprofile)
-- [ClusterNetworkProfileList](#clusternetworkprofilelist)
-- [ClusterOutput](#clusteroutput)
-- [ClusterOutputList](#clusteroutputlist)
 - [ClusterProfile](#clusterprofile)
-- [ClusterProfileList](#clusterprofilelist)
-- [ClusterStatus](#clusterstatus)
-- [ClusterStatusList](#clusterstatuslist)
+- [ClusterNetworkProfile](#clusternetworkprofile)
+- [ClusterGroupProfile](#clustergroupprofile)
 - [FabricInfra](#fabricinfra)
-- [FabricInfraList](#fabricinfralist)
-- [ServiceMeshTopology](#servicemeshtopology)
-- [ServiceMeshTopologyList](#servicemeshtopologylist)
 
 
 
@@ -1331,71 +1319,6 @@ _Appears in:_
 | `image_pull_secret` _string_ |  |
 | `network_operator_version` _string_ |  |
 
-
-#### ServiceMeshSpec
-
-
-
-
-
-_Appears in:_
-- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
-- [ConfigOverridesSpec](#configoverridesspec)
-
-| Field | Description |
-| --- | --- |
-| `name` _string_ |  |
-| `mesh_id` _string_ |  |
-| `network` _string_ |  |
-| `role` _string_ |  |
-| `kubeconfig` _string_ |  |
-
-
-#### ServiceMeshTopology
-
-
-
-ServiceMeshTopology is the Schema for the servicemeshtopologies API
-
-_Appears in:_
-- [ServiceMeshTopologyList](#servicemeshtopologylist)
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ServiceMeshTopology`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `spec` _[ServiceMeshTopologySpec](#servicemeshtopologyspec)_ |  |
-
-
-#### ServiceMeshTopologyList
-
-
-
-ServiceMeshTopologyList contains a list of ServiceMeshTopology
-
-
-
-| Field | Description |
-| --- | --- |
-| `apiVersion` _string_ | `netop.mgr/v1alpha1`
-| `kind` _string_ | `ServiceMeshTopologyList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `items` _[ServiceMeshTopology](#servicemeshtopology) array_ |  |
-
-
-#### ServiceMeshTopologySpec
-
-
-
-ServiceMeshTopologySpec defines the desired state of ServiceMeshTopology
-
-_Appears in:_
-- [ServiceMeshTopology](#servicemeshtopology)
-
-| Field | Description |
-| --- | --- |
-| `clusters` _string array_ |  |
 
 
 
