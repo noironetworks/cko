@@ -9,9 +9,10 @@
 Package v1alpha1 contains API Schema definitions for the netop.mgr v1alpha1 API group
 
 ### Resource Types
-- [FabricInfra](#fabricinfra)
 - [ClusterProfile](#clusterprofile)
+- [ClusterNetworkProfile](#clusternetworkprofile)
 - [ClusterGroupProfile](#clustergroupprofile)
+- [FabricInfra](#fabricinfra)
 
 
 
@@ -22,6 +23,7 @@ Package v1alpha1 contains API Schema definitions for the netop.mgr v1alpha1 API 
 
 
 _Appears in:_
+- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
@@ -36,6 +38,20 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ |  |
 
 
+#### AciCniConfigStatusSpec
+
+
+
+
+
+_Appears in:_
+- [ClusterProfileStatus](#clusterprofilestatus)
+
+| Field | Description |
+| --- | --- |
+| `version` _string_ |  |
+
+
 #### AciConfigSpec
 
 
@@ -43,11 +59,11 @@ _Appears in:_
 
 
 _Appears in:_
+- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
 | --- | --- |
-| `fabric_infra` _string_ |  |
 | `system_id` _string_ |  |
 | `l3out` _[L3OutSpec](#l3outspec)_ |  |
 | `cluster_l3out` _[ClusterL3OutSpec](#clusterl3outspec)_ |  |
@@ -130,6 +146,7 @@ _Appears in:_
 | `vlans` _integer array_ |  |
 | `context` _[ContextSpec](#contextspec)_ |  |
 | `remote_as_numbers` _integer array_ |  |
+| `pod_subnets` _string array_ |  |
 
 
 #### ApicSecretRef
@@ -144,8 +161,40 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `name` _string_ | Secret name |
-| `username` _string_ | Key name that contains username |
-| `password` _string_ | Key name that contains password |
+
+
+#### ArtifactsSpec
+
+
+
+
+
+_Appears in:_
+- [ClusterOutputConfigSpec](#clusteroutputconfigspec)
+
+| Field | Description |
+| --- | --- |
+| `deployment` _string_ |  |
+| `tar` _string_ |  |
+
+
+#### AssignedSubnet
+
+
+
+
+
+_Appears in:_
+- [ClusterProfileStatus](#clusterprofilestatus)
+
+| Field | Description |
+| --- | --- |
+| `node_subnet` _string_ |  |
+| `pod_subnet` _string_ |  |
+| `cluster_svc_subnet` _string_ |  |
+| `node_svc_subnet` _string_ |  |
+| `extern_dynamic` _string_ |  |
+| `extern_static` _string_ |  |
 
 
 #### AvailableSpec
@@ -165,6 +214,7 @@ _Appears in:_
 | `vlans` _integer array_ |  |
 | `contexts` _object (keys:string, values:[ContextSpec](#contextspec))_ |  |
 | `remote_as_numbers` _integer array_ |  |
+| `pod_subnets` _string array_ |  |
 
 
 #### BGPSpec
@@ -203,11 +253,26 @@ _Appears in:_
 
 
 _Appears in:_
+- [ClusterInfoConfigSpec](#clusterinfoconfigspec)
 - [ConfigOverridesSpec](#configoverridesspec)
 
 | Field | Description |
 | --- | --- |
 | `target_version` _string_ |  |
+
+
+#### CalicoCniConfigStatusSpec
+
+
+
+
+
+_Appears in:_
+- [ClusterProfileStatus](#clusterprofilestatus)
+
+| Field | Description |
+| --- | --- |
+| `version` _string_ |  |
 
 
 #### ClToFabMap
@@ -301,6 +366,8 @@ _Appears in:_
 _Appears in:_
 - [ClusterGroupProfileSpec](#clustergroupprofilespec)
 - [ClusterInfoSpec](#clusterinfospec)
+- [ClusterInfoStruct](#clusterinfostruct)
+- [ClusterNetworkProfileSpec](#clusternetworkprofilespec)
 
 | Field | Description |
 | --- | --- |
@@ -312,7 +379,6 @@ _Appears in:_
 | `profile` _[ProfileSpec](#profilespec)_ |  |
 | `service_mesh_config` _[ServiceMeshSpec](#servicemeshspec)_ |  |
 | `service_mesh_topology` _[ServiceMeshSpec](#servicemeshspec) array_ |  |
-| `cko_git_config` _[GitConfigSpec](#gitconfigspec)_ |  |
 | `monitoring_config` _[MonitoringConfigSpec](#monitoringconfigspec)_ |  |
 | `lb_config` _[LbConfigSpec](#lbconfigspec)_ |  |
 | `cni` _string_ |  |
@@ -323,6 +389,8 @@ _Appears in:_
 | `operator_config` _[OperatorSpec](#operatorspec)_ |  |
 | `connectivity_checker` _[ConnCheckerConfigSpec](#conncheckerconfigspec)_ |  |
 | `fabricinfra` _[FabricContext](#fabriccontext)_ |  |
+| `gitops` _[GitopsSpec](#gitopsspec)_ |  |
+| `cluster_profile_name` _string_ |  |
 
 
 #### ClusterInfoList
@@ -357,6 +425,8 @@ _Appears in:_
 
 
 
+
+
 #### ClusterL3OutSpec
 
 
@@ -368,9 +438,59 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
+| `vrf` _[VrfSpec](#vrfspec)_ |  |
 | `aep` _string_ |  |
 | `svi` _[SviSpec](#svispec)_ |  |
 | `bgp` _[BgpSpec](#bgpspec)_ |  |
+
+
+#### ClusterNetworkProfile
+
+
+
+ClusterNetworkProfile is the Schema for the clusternetworkprofiles API
+
+_Appears in:_
+- [ClusterNetworkProfileList](#clusternetworkprofilelist)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `netop.mgr/v1alpha1`
+| `kind` _string_ | `ClusterNetworkProfile`
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `spec` _[ClusterNetworkProfileSpec](#clusternetworkprofilespec)_ |  |
+
+
+#### ClusterNetworkProfileList
+
+
+
+ClusterNetworkProfileList contains a list of ClusterNetworkProfile
+
+
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `netop.mgr/v1alpha1`
+| `kind` _string_ | `ClusterNetworkProfileList`
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `items` _[ClusterNetworkProfile](#clusternetworkprofile) array_ |  |
+
+
+#### ClusterNetworkProfileSpec
+
+
+
+ClusterNetworkProfileSpec defines the desired state of ClusterNetworkProfile
+
+_Appears in:_
+- [ClusterNetworkProfile](#clusternetworkprofile)
+
+| Field | Description |
+| --- | --- |
+| `config_overrides` _[ClusterInfoConfigSpec](#clusterinfoconfigspec)_ | INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run "make" to regenerate code after modifying this file |
+
+
 
 
 #### ClusterOutput
@@ -402,6 +522,10 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `artifacts` _[ArtifactsSpec](#artifactsspec)_ |  |
+| `operator_config` _[OperatorSpec](#operatorspec)_ |  |
+| `infra_vlan` _integer_ |  |
+| `fabricinfra` _[FabricContext](#fabriccontext)_ |  |
+| `cni` _string_ |  |
 
 
 #### ClusterOutputList
@@ -492,6 +616,54 @@ _Appears in:_
 | `fabricinfra` _[FabricContext](#fabriccontext)_ |  |
 | `distro` _[DistroSpec](#distrospec)_ |  |
 | `operator_config` _[OperatorSpec](#operatorspec)_ |  |
+| `pod_subnet_from_pool` _boolean_ |  |
+
+
+
+
+#### ClusterStatus
+
+
+
+ClusterStatus is the Schema for the clusterstatuses API
+
+_Appears in:_
+- [ClusterStatusList](#clusterstatuslist)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `netop.mgr/v1alpha1`
+| `kind` _string_ | `ClusterStatus`
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `spec` _[ClusterStatusSpec](#clusterstatusspec)_ |  |
+
+
+#### ClusterStatusList
+
+
+
+ClusterStatusList contains a list of ClusterStatus
+
+
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `netop.mgr/v1alpha1`
+| `kind` _string_ | `ClusterStatusList`
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `items` _[ClusterStatus](#clusterstatus) array_ |  |
+
+
+#### ClusterStatusSpec
+
+
+
+ClusterStatusSpec defines the desired state of ClusterStatus
+
+_Appears in:_
+- [ClusterStatus](#clusterstatus)
+
+
 
 
 
@@ -513,11 +685,11 @@ _Appears in:_
 | `calico_cni_config` _[CalicoCniConfigSpec](#calicocniconfigspec)_ |  |
 | `service_mesh_config` _[ServiceMeshSpec](#servicemeshspec)_ |  |
 | `service_mesh_topology` _[ServiceMeshSpec](#servicemeshspec) array_ |  |
-| `cko_git_config` _[GitConfigSpec](#gitconfigspec)_ |  |
 | `monitoring_config` _[MonitoringConfigSpec](#monitoringconfigspec)_ |  |
 | `lb_config` _[LbConfigSpec](#lbconfigspec)_ |  |
 | `cko_proxy_config` _[ProxyConfigSpec](#proxyconfigspec)_ |  |
 | `connectivity_checker` _[ConnCheckerConfigSpec](#conncheckerconfigspec)_ |  |
+| `gitops` _[GitopsSpec](#gitopsspec)_ |  |
 
 
 #### ConnCheckerConfigSpec
@@ -626,6 +798,7 @@ _Appears in:_
 
 _Appears in:_
 - [ClusterInfoConfigSpec](#clusterinfoconfigspec)
+- [ClusterOutputConfigSpec](#clusteroutputconfigspec)
 - [ClusterProfileSpec](#clusterprofilespec)
 - [ClusterProfileStatus](#clusterprofilestatus)
 
@@ -688,6 +861,7 @@ _Appears in:_
 | `mcast_subnets` _string array_ |  |
 | `external_subnets` _string array_ |  |
 | `internal_subnets` _string array_ |  |
+| `pod_subnets` _string array_ |  |
 | `vlans` _integer array_ |  |
 | `bgp` _[BGPSpec](#bgpspec)_ |  |
 | `contexts` _object (keys:string, values:[ContextSpec](#contextspec))_ |  |
@@ -697,7 +871,7 @@ _Appears in:_
 
 
 
-#### GitConfigSpec
+#### GitopsSpec
 
 
 
@@ -709,13 +883,7 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `git_repo` _string_ |  |
-| `git_dir` _string_ |  |
-| `git_branch` _string_ |  |
-| `git_token` _string_ |  |
-| `git_user` _string_ |  |
-| `git_email` _string_ |  |
-| `sleep_duration` _integer_ |  |
+| `base64_encoded_argo_manifests` _string_ |  |
 
 
 #### IstioConfigSpec
@@ -894,6 +1062,7 @@ _Appears in:_
 | `name` _string_ |  |
 | `installer_provisioned_lb_ip` _string_ |  |
 | `vlan_pool` _string_ |  |
+| `elag_name` _string_ |  |
 
 
 #### NetConfigSpec
@@ -966,6 +1135,7 @@ _Appears in:_
 
 _Appears in:_
 - [ClusterInfoConfigSpec](#clusterinfoconfigspec)
+- [ClusterOutputConfigSpec](#clusteroutputconfigspec)
 - [ClusterProfileSpec](#clusterprofilespec)
 
 | Field | Description |
@@ -1150,6 +1320,9 @@ _Appears in:_
 | `network_operator_version` _string_ |  |
 
 
+
+
+
 #### SnatSpec
 
 
@@ -1266,10 +1439,12 @@ _Appears in:_
 
 _Appears in:_
 - [AciConfigSpec](#aciconfigspec)
+- [ClusterL3OutSpec](#clusterl3outspec)
 - [ContextSpec](#contextspec)
 
 | Field | Description |
 | --- | --- |
 | `name` _string_ |  |
 | `tenant` _string_ |  |
+
 
