@@ -1102,4 +1102,104 @@ EOF
 ```
 
 ### CKO Cleanup in Workload Cluster
-[This script](scripts/cleanup-workload-cluster.sh) can be used to cleanup CKO in the Workload Cluster (note the script will optionally allow you to delete CNI):
+[This script](scripts/cleanup-workload-cluster.sh) can be used to clean up CKO in the Workload Cluster (note the script will optionally allow you to delete CNI):
+
+### CKO Auto-Restore in Control Cluster
+
+The features provide functionality to pull the manifests from GitHub repo control/restore folder and apply it to the newly deployed control
+cluster. This will help in auto-restore the control-cluster in case of failure or inaccessibility of the pre-existing cluster
+
+#### Deploy using Helm:
+To use auto-restore functionality follow below steps:
+- Add extraEnv section to the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml```:
+```
+extraEnv:
+- name: RESTORE_CLUSTER
+  value: "true"
+```
+
+- Follow [Deploy using Helm](#314-deploy-using-helm) section to install
+- If the <git-branch>/control/restore has CR files, it will automatically deploy those file with the same state as of previous cluster.
+- Default RESTORE_CLUSTER is considered as false until and unless explicitly mentioned.
+
+#### Multi-Cluster Transition:
+To deploy the full cycle of creation in one cluster and restore into another cluster follow below steps:
+##### Cluster-1:
+- Create a new GitHub branch and provide secret credentials before helm-install. [Secret for GitHub access](#313-create-secret-for-github-access)
+- Add extraEnv section to the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml```:
+```
+extraEnv:
+- name: RESTORE_CLUSTER
+  value: "true"
+```
+
+- Follow [Deploy using Helm](#314-deploy-using-helm) section to install
+- Create all CRs (fabricinfra,clustergrouprofile, clusternetworkprofile, clusterprofile and clusterinfo) needed to deploy the workload cluster.
+- Check in GitHub repo that control/restore has been populated with corresponding files
+
+#### Cluster-2:
+- Add extraEnv section to the template provided in the [Appendix](#control-cluster-install-configuration) to create the ```my_values.yaml```:
+```
+extraEnv:
+- name: RESTORE_CLUSTER
+  value: "true"
+```
+
+- Follow [Deploy using Helm](#314-deploy-using-helm) section to install
+- If the <git-branch>/control/restore has CR files, it will automatically create those file with the same state as of previous cluster.
+- Default RESTORE_CLUSTER is considered as false until and unless explicitly mentioned.
+
+### Diagnostics:
+### Scenario 1
+In case a new cluster is created and the netop-org-manager pod goes into CrashloopBackoff
+and throws error : `Failed to push file/remove - Cluster UUID does not match` when checking pod logs.
+
+##### Observation
+- Verify that the generated configmap `cluster-uuid`  with Data field uuid and file content in git-repo/(branch)/control/restore/cluster-uuid matches
+- ```kubectl get configmap -n netop-manager cluster-uuid -o yaml```
+
+##### Root Cause
+- The generated configmap `cluster-uuid`  with Data field uuid and file content in git-repo/(branch)/control/restore/cluster-uuid not matches
+- If different ,then some other control cluster is using the same GitHub branch and repository. 
+
+##### Diagnostic Steps
+- Identify which other control cluster is using the same GitHub repo/branch and operate that cluster.
+- If the other control cluster is not identifiable or non-accessible, make use of unique repo/branch to avoid takeover.
+
+
+### Scenario 2
+In case of a working cluster and the netop-org-manager pod goes into CrashloopBackoff
+and throws error : `Failed to push/remove file - Cluster UUID does not match` when checking pod logs.
+
+##### Observation
+- Verify that the generated configmap `cluster-uuid`  with Data field uuid and file content in git-repo/(branch)/control/restore/cluster-uuid matches
+- ```kubectl get configmap -n netop-manager cluster-uuid -o yaml```
+
+##### Root Cause
+- The generated configmap `cluster-uuid`  with Data field uuid and file content in git-repo/(branch)/control/restore/cluster-uuid not matches
+- If different ,then some other control cluster is using the same GitHub branch and repository.
+
+##### Diagnostic Steps
+- Identify which other control cluster is using the same GitHub repo/branch and remove that cluster.
+- If the other control cluster is not identifiable or non-accessible, ensure using unique repo/branch to avoid takeover.
+
+
+### Scenario 3
+In case restore functionality is configured and still do not see files being pushed/removed from GitHub Repository.
+
+##### Observation
+- Verify that the `RESTORE_CLUSTER` environment variable is `true` in netop-org-deployment
+
+
+##### Root Cause
+- The `RESTORE_CLUSTER` environment variable is marked `false` or not present in netop-org-deployment
+
+##### Diagnostic Steps
+- Edit the netop-org-manager deployment in netop-manager namespace
+-```kubectl edit deployment -n netop-manager        netop-org-manager-netop-org-manager```
+- Add the `RESTORE_CLUSTER` env
+```
+- name: RESTORE_CLUSTER
+-  value: "true"
+```
+-This will restart the netop-org-manager pod with auto-restore enabled
