@@ -204,6 +204,10 @@ if check_proxy_vars; then
    export no_proxy=$api_server,$pod_cidr,$NO_PROXY
 fi
 
+# Get Ubuntu Version
+source /etc/os-release && VERSION_CODENAME=$(echo $VERSION_CODENAME)
+echo $VERSION_CODENAME
+
 # Update packages
 echo "Updating Ubuntu..."
 # sudo -E apt-get autoremove --purge
@@ -238,10 +242,11 @@ if ! sudo -E curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo -E g
 fi
 
 # Add docker apt repository
-if ! echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo -E tee /etc/apt/sources.list.d/docker.list; then
-    echo "Error: Failed to add docker apt repository"
+if ! (echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" | sudo -E tee /etc/apt/sources.list.d/docker.list); then
+    echo "Error: Failed to add Docker APT repository"
     exit 1
 fi
+
 
 # Fetch the package lists from docker repository
 if ! sudo -E apt-get -y update; then
@@ -250,9 +255,16 @@ if ! sudo -E apt-get -y update; then
 fi
 
 # Install docker and containerd
-if ! sudo -E apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin; then
+if [ "$VERSION_CODENAME" = "jammy" ]; then
+  if ! (sudo -E apt-get install -y docker-ce=5:23.0.6-1~ubuntu.22.04~jammy docker-ce-cli=5:23.0.6-1~ubuntu.22.04~jammy containerd.io=1.6.21-1 docker-compose-plugin=2.17.3-1~ubuntu.22.04~jammy); then
     echo "Error: Failed to install docker and containerd"
     exit 1
+  fi
+else
+  if ! (sudo -E apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin); then
+    echo "Error: Failed to install docker and containerd"
+    exit 1
+  fi
 fi
 
 #rm -f /etc/containerd/config.toml
@@ -303,9 +315,16 @@ if ! sudo -E apt-get -y update; then
 fi
 
 # Install kubeadm, kubelet & kubectl
-if ! sudo -E apt-get install -y kubelet kubectl; then
-    echo "Error: Failed to install kubeadm, kubelet & kubectl"
-    exit 1
+if [ "$VERSION_CODENAME" = "jammy" ]; then
+  if ! sudo -E apt-get install -y kubeadm=1.27.1-00 kubelet=1.27.1-00 kubectl=1.27.1-00; then
+      echo "Error: Failed to install kubeadm, kubelet & kubectl"
+      exit 1
+  fi
+else
+  if ! sudo -E apt-get install -y kubeadm kubelet kubectl; then
+      echo "Error: Failed to install kubeadm, kubelet & kubectl"
+      exit 1
+  fi
 fi
 
 echo "Done"
@@ -314,7 +333,7 @@ echo "Done"
 # Step 7: Create the cluster with kind
 
 sudo -E kind create cluster --name control-cluster
-sudo chmod +r /home/cko/.kube/config
+sudo chmod +r $HOME/.kube/config
 
 
 # Step 8: Untaint node
@@ -358,6 +377,8 @@ if check_secret_vars; then
 
     echo "Creating control cluster secrets"
 
+    # echo "DEBUG: $REPO, $DIR, $BRANCH_NAME, $GITHUB_PAT, $GIT_USER, $GIT_EMAIL, $HTTP_PROXY, $HTTPS_PROXY, $NO_PROXY"
+
     kubectl create secret generic cko-config -n netop-manager \
     --from-literal=repo=$REPO \
     --from-literal=dir=$DIR \
@@ -384,7 +405,8 @@ if check_secret_vars; then
     
     # Write values.yaml
     echo "$values_yaml" | sudo -E tee values.yaml > /dev/null
-    if ! sudo -E helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f $(pwd)/values.yaml --wait; then
+
+    if ! sudo -E helm install netop-org-manager cko/netop-org-manager -n netop-manager --create-namespace --version 0.9.1 -f values.yaml --wait; then
      echo "Helm timed out waiting for condition. Please check that netop-org-manager resources are running"
     fi
 else
