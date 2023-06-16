@@ -1203,3 +1203,38 @@ In case restore functionality is configured and still do not see files being pus
 -  value: "true"
 ```
 -This will restart the netop-org-manager pod with auto-restore enabled
+
+### CKO Shadow Resource in Control Cluster
+
+The features offer a backup mechanism for the generated acc_provision_input and netop-manager deployment manifests, 
+ensuring their preservation in the event of APIC unprovisioning failure.
+
+##### Exisiting Condition
+
+In the current situation, when there is a failure in the process of unprovisioning, the user faces a challenge in 
+identifying the specific factors that contributed to the failure. To troubleshoot, the user has limited options: either manually accessing the pod and examining the generated manifests, 
+or debugging the CRs (Custom Resources) involved.
+
+##### Requirement
+Given the current state of affairs, there is a need to establish a convenient method for referencing and accessing failed or incorrect manifests.
+
+##### Enhancements
+Taking into account the aforementioned requirement, a proposed solution is to create a "shadowresource" Custom Resource (CR) using netop-fabric-manager. 
+This CR would capture a snapshot of the currently generated manifests during provisioning. 
+In the event of a failure in APIC unprovisioning, as indicated by the netop-fabric-manager pod logs, users can refer to these shadowresources for troubleshooting purposes.
+
+##### Diagnostic Steps
+###### On Exisiting Cluster
+Run the following command to retrieve the shadowresource for a specific cluster profile in the netop-manager namespace:
+
+- ```kubectl get shadowresources -n netop-manager <cluserinfoname>```
+
+Note that the shadowresource will have the same name as the clusterinfo.
+
+###### On New Cluster
+If the user ends up deploying a new cluster, they can still reference previously generated shadow resources by accessing the Git repository at the following URL
+```
+https://github.com/<REPO>/<DIR>/tree/<BRANCH>/workload/shadowresource
+```
+Make sure to replace <REPO>, <DIR>, and <BRANCH> with the appropriate values corresponding to the Git repository.
+
