@@ -1,6 +1,6 @@
 # Cisco Network Operator for Cisco Fabrics
 
-# 1. Overview
+## 1. Overview
 
 Network Operator enables 5G platform operators to specify configuration intent for Container Network Function (CNF) interfaces natively using Kubernetes resources and annotations. 
 Because the Network Operator is written as a fully compliant Kubernetes Operator, it continuously reconciles the state of the Cisco fabric, the Kubernetes scheduler, and each CNF interface configuration to ensure required network resources are provided and configured appropriately at each Kubernetes node so that CNFs can consume them.
@@ -39,7 +39,7 @@ In this topology, Openshift nodes can connect to ACI Leafs using multiple interf
 2. The MACVLAN CNI plugin utilizes interfaces aggregated in the bond1 logical interface.
 3. The last pair of interfaces is not aggregated, but both can be used for SR-IOV Physical Functions, which will be subsequently virtualized into Virtual Functions.
 
-## 3.2 Cisco ACI and Openshift cluster workloads logical network design
+### 3.2 Cisco ACI and Openshift cluster workloads logical network design
 
 Network Operator is deployed on the Openshift cluster, and it is responsible for orchestrating the ACI fabric configuration and influencing the pod scheduling process based on network readiness, utilizing CNI chaining technology.
 
@@ -73,7 +73,7 @@ Network Operator runs as a pods on Openshift cluster in the `aci-containers-syst
   * watch for Pods with additional network attachments
   * generates NodeFabricNetworkAttachment CR and other supplemental CRs explained later.
 
-![Network Operator  software architecture](docs/user-guide/diagrams/netop-cni-architecture.png)
+![Network Operator  software architecture](diagrams/netop-cni-architecture.png)
 
 ## 5 Network Operator installation
 
@@ -92,7 +92,7 @@ Before installation of the chained CNI to automate ACI fabric stitching for seco
       * i.e. using [nmstate](https://nmstate.io/features/lldp.html) operator
 
 
-### 5.1. Network Operator installation
+### 5.2. Network Operator installation
 
 1. Install acc-provision on the host that has access to APIC.
 
@@ -206,11 +206,11 @@ If the NadVlanMap file has been provided in aci-prov-input.yaml file, you should
 NAME           AGE
 nad-vlan-map   19d
 ```
-# 6. Network Operator - quick start guide:
+## 6. Network Operator - quick start guide:
 
 **&#9432;** _Make sure to have Multus installed, LLDP enabled on the interfaces used to attach additional networks to the pods_
 
-## 6.1 Network Operator - orchestrate fabric configurartion for SR-IOV interfaces connected to POD
+### 6.1 Network Operator - orchestrate fabric configurartion for SR-IOV interfaces connected to POD
 
 1. Create `SriovNetworkNodePolicy`, refer for details how to use SR-IOV Operator in [documentation](https://github.com/openshift/sriov-network-operator).
 
@@ -398,7 +398,7 @@ spec:
   primaryCni: sriov                               # CNI plugin used
 ```
 
-## 6.1 Network Operator - orchestrate fabric configurartion for MACVLAN interfaces connected to POD
+### 6.2 Network Operator - orchestrate fabric configurartion for MACVLAN interfaces connected to POD
 
 Similarly to SR-IOV interfaces, additional interfaces managed by MACVLAN CNI are supported by Network Operator. It will configured Cisco ACI fabric with relevant Static Ports under EPG. In case of bonded uplink, Network Operator discovers port-channel members and configures static port under EPG referring to the Virtual Port-Channel or Port-Channel Interface Group Policy.
 
@@ -526,5 +526,5 @@ Based on the Ethernet ports discovered by Network Operator, The Virtual Port Cha
 |:--:|
 | *Static Port for VPC interface automatically discovered* |
 
-# 7. Custom features for Ericsson Packet Code support
+## 7. Custom features for Ericsson Packet Code support
 
