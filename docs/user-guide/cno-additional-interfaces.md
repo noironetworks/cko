@@ -805,7 +805,7 @@ Once CNI chaining is enabled for primary interface and Network Operator deployed
 
 ```yaml
 [core@worker2 ~]$ cat /run/multus/cni/net.d/10-ovn-kubernetes.conf
- {
+{
  	"name": "ovn-kubernetes",
  	"cniVersion": "0.4.0",
  	"plugins": [{
@@ -819,16 +819,16 @@ Once CNI chaining is enabled for primary interface and Network Operator deployed
  		"logfile-maxsize": 100,
  		"logfile-maxbackups": 5,
  		"logfile-maxage": 5
- 	},
+    },
 ### CNO CNI CHAINING INFORMATION WILL BE ADDED:
-  {
+    {
  		"supportedVersions": ["0.3.0", "0.3.1", "0.4.0"],
  		"type": "netop-cni",
  		"chaining-mode": true,
  		"log-level": "debug",
  		"log-file": "/var/log/netop-agent.log"
- 	}]
- }
+ 	  }]
+}
  ```
 
 **&#9432;** ___NOTE:___ _enabling CNI chaining on primary interface require restart of multus PODs (the same applies to disabling CNI chaining)_
