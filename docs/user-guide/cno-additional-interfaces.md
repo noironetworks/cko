@@ -801,7 +801,7 @@ You can enable OVN-Kubernetes CNI chaining with Cisco Network Operator at the ti
 Add following configuration options to the acc-provision-input.yaml file:
 - `chained_cni_config.primary_interface_chaining: true` - enable feature
 - `primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf"`- indicate path to the primary CNI configuration file.
-Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes (/run/multus/cni/net.d/10-ovn-kubernetes.conf) will have additional entry:
+Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes located in each node filesystem: (`/run/multus/cni/net.d/10-ovn-kubernetes.conf`) will have additional entry:
 
 ```json
 {
@@ -818,15 +818,17 @@ Once CNI chaining is enabled for primary interface and Network Operator deployed
  		"logfile-maxsize": 100,
  		"logfile-maxbackups": 5,
  		"logfile-maxage": 5
-    },
-### CNO CNI CHAINING INFORMATION WILL BE ADDED:
-    {
+  },
+  {
+    "_comment": "CNO CNI CHAINING INFORMATION WILL BE ADDED:"
+  },
+  {
  		"supportedVersions": ["0.3.0", "0.3.1", "0.4.0"],
  		"type": "netop-cni",
  		"chaining-mode": true,
  		"log-level": "debug",
  		"log-file": "/var/log/netop-agent.log"
- 	  }]
+ 	}]
 }
  ```
 
