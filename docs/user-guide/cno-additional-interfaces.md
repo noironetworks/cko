@@ -21,7 +21,7 @@
 - [7.2.2 FabricVlanPool custom reosource](#722-fabricvlanpool-custom-reosource)
 - [7.2.3 External router port attachment](#723-external-router-port-attachment)
 - [7.2.4 VLAN file ingest](#724-vlan-file-ingest)
-- [Primary CNI chaining (tech-preview)](#8-primary-cni-chaining-tech-preview)
+- [8. Primary CNI chaining (tech-preview)](#8-primary-cni-chaining-tech-preview)
 
 ## 1. Overview
 
@@ -801,10 +801,9 @@ You can enable OVN-Kubernetes CNI chaining with Cisco Network Operator at the ti
 Add following configuration options to the acc-provision-input.yaml file:
 - `chained_cni_config.primary_interface_chaining: true` - enable feature
 - `primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf"`- indicate path to the primary CNI configuration file.
-Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes will have additional entry:
+Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes (/run/multus/cni/net.d/10-ovn-kubernetes.conf) will have additional entry:
 
-```yaml
-[core@worker2 ~]$ cat /run/multus/cni/net.d/10-ovn-kubernetes.conf
+```json
 {
  	"name": "ovn-kubernetes",
  	"cniVersion": "0.4.0",
