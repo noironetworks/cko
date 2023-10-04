@@ -1,5 +1,28 @@
 # Cisco Network Operator for Cisco Fabrics
 
+# Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Features](#2-features)
+- [3. Cisco Network Operator for Telco 5G cloud-native fabric orchestration](#3-cisco-network-operator-for-telco-5g-cloud-native-fabric-orchestration)
+- [3.1 Cisco ACI and Openshift node physical connectivity for CNO orchestration](#31-cisco-aci-and-openshift-node-physical-connectivity-for-cno-orchestration)
+- [3.2 Cisco ACI and Openshift cluster workloads logical network design](#32-cisco-aci-and-openshift-cluster-workloads-logical-network-design)
+- [4 Network Operator software architecture](#4-network-operator-software-architecture)
+- [5 Network Operator installation](#5-network-operator-installation)
+- [5.1 Network Operator installation pre-requisites](#51-network-operator-installation-pre-requisites)
+- [5.2. Network Operator installation](#52-network-operator-installation)
+- [6. Network Operator - quick start guide](#6-network-operator---quick-start-guide)
+- [6.1 Network Operator - orchestrate fabric configurartion for SR-IOV interfaces connected to POD](#61-network-operator---orchestrate-fabric-configurartion-for-sr-iov-interfaces-connected-to-pod)
+- [6.2 Network Operator - orchestrate fabric configurartion for MACVLAN interfaces connected to POD](#62-network-operator---orchestrate-fabric-configurartion-for-macvlan-interfaces-connected-to-pod)
+- [7. Custom features for Ericsson Packet Core support](#7-custom-features-for-ericsson-packet-core-support)
+- [7.1 Custom requirements](#71-custom-requirements)
+- [7.2 Network Operator implementation](#72-network-operator-implementation)
+- [7.2.1 NadVlanMap Custom Resource](#721-nadvlanmap-custom-resource)
+- [7.2.2 FabricVlanPool custom reosource](#722-fabricvlanpool-custom-reosource)
+- [7.2.3 External router port attachment](#723-external-router-port-attachment)
+- [7.2.4 VLAN file ingest](#724-vlan-file-ingest)
+- [Primary CNI chaining (tech-preview)](#8-primary-cni-chaining-tech-preview)
+
 ## 1. Overview
 
 Network Operator enables 5G platform operators to specify configuration intent for Container Network Function (CNF) interfaces natively using Kubernetes resources and annotations. 
@@ -127,10 +150,10 @@ chained_cni_config:
   secondary_interface_chaining: true   # enable chained config
   use_global_scope_vlan: true              # use unique VLANs per leaf switch.
   skip_node_network_provisioning: true     # if true, Cisco CNI do not provision EPG/BD for node network (must be provisioned before Openshift cluster will be installed).
-  vlan_file: "nad_vlan_map_input.csv"  # path to the CSV file with the VLAN information.
+  vlans_file: "nad_vlan_map_input.csv"  # path to the CSV file with the VLAN information.
   # primary_interface_chaining: false      # (optional) enable CNI chaining for primary CNI – Network Operator will check connectivity to gateway prior allowing Pod to start. Currently not 		supported by Red Hat.
   # primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf” # (optional) if specified, primary CNI will be chained as well – this is not required by current use-case.
-  secondary_vlans: [3023, 3700, 3701, 3801, 3804, 3805]   # (optional) definite list of all vlans that should be populated in VLAN Pool for secondary intefaces
+  secondary_vlans: [101,102,103,104,201]   # (optional) definite list of all vlans that should be populated in VLAN Pool for secondary intefaces
 
 registry:                                  # Registry information 
   image_prefix: quay.io/noiro
@@ -156,13 +179,13 @@ aci_config:
 * `chained_cni_config.secondary_interface_chaining` – enables CNI chaining with MACVLAN and SRIOV CNI plugins for secondary interfaces.
 * `chained_cni_config.skip_node_network_provisioning` - Network provisioning for primary CNI (BD/EPG is specific VRF / Tenant, contract to provided L3out).
 * `chained_cni_config.use_global_scope_vlan` – for a given VLAN one EPG is created even if multiple Network Attachment Definition refers to the same VLAN. If False, for each NAD using the same VLAN unique EPG will be created. 
-* `chained_cni_config.vlan_file` – read CSV file to load VLAN id and create NadVlanMap Custom Resource at Day-0. This feature has been developed to meet specific Customer CNF operation guidance.
+* `chained_cni_config.vlans_file` – read CSV file to load VLAN id and create NadVlanMap Custom Resource at Day-0. This feature has been developed to meet specific Customer CNF operation guidance.
 * `chained_cni_config.secondary_vlans` – List of VLANs used by CNO to provision VLAN Pool attached to <system_id>-secondary physical domain. This domain is attached to the EPGs created by CNO. If ip_sheet is specified, the vlan pool can be populated from the excel sheet.
 
 4. Run acc-provision on the host that has access to APIC. Script will generate output file. 
 
 ```bash
-acc-provision -a -c acc-prov-config.yml -u <apic_user> -p <apic_password> -f openshift-sdn-ovn-baremetal -o acc_deployment.yaml
+acc-provision -a -c acc-provision-config.yml -u <apic_user> -p <apic_password> -f openshift-sdn-ovn-baremetal -o acc_deployment.yaml
 ```
 5. Apply the output file to the openshift cluster
 
@@ -206,9 +229,9 @@ If the NadVlanMap file has been provided in aci-prov-input.yaml file, you should
 NAME           AGE
 nad-vlan-map   19d
 ```
-## 6. Network Operator - quick start guide:
+## 6. Network Operator - quick start guide
 
-**&#9432;** _Make sure to have Multus installed, LLDP enabled on the interfaces used to attach additional networks to the pods_
+**&#9432;** ___NOTE:___ _Make sure to have Multus installed, LLDP enabled on the interfaces used to attach additional networks to the pods_
 
 ### 6.1 Network Operator - orchestrate fabric configurartion for SR-IOV interfaces connected to POD
 
@@ -474,6 +497,7 @@ Network Operator reacts to the NetworkAttachmentDefinition create event, and wil
 
 3. Create Pod manifest
 
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -488,7 +512,7 @@ spec:
   - name: network-multitool
     image: wbitt/network-multitool
   nodeName: worker2.ocpbm3.noiro.local
-
+```
 NodeFabricNetworkAttachment resource created for NAD `macvlan-net2-bond1-604`
 
 ```yaml
@@ -526,5 +550,288 @@ Based on the Ethernet ports discovered by Network Operator, The Virtual Port Cha
 |:--:|
 | *Static Port for VPC interface automatically discovered* |
 
-## 7. Custom features for Ericsson Packet Code support
+## 7. Custom features for Ericsson Packet Core support
 
+### 7.1 Custom requirements
+
+Ericsson 5G Packet Core application deployment on Openshift includes Network Attachment Definitions to connect pods to additional networks based on MACVLAN and SR-IOV. Here is a list of custom requirements for NAD specification:
+(1) NAD manifest for SR-IOV has VLAN ID = 0, while NAD for MACVLAN refers to the parent bond interface, without subinterface. 
+(2) NetworkAttachmentDefinition doesn't consists of VLAN ID, it is assumed that CNF PODs will trunk multiple VLANs. 
+(3) Unique network segment (VLAN) will be shared across NetworkAttachmentDefinitions to connect CNF workloads using SR-IOV and MACVLAN CNI's. 
+(4) Mapping of VLANs to NADs has been provided in form of excel spreadsheet, which is assumed to be a rather static, and part of DAY-1 configuration.
+(5) Currently validated design assumes that Cisco ACI fabric acts as a Layer-2 switching network, routing between network segments will be configured centrally on the attached external router.
+
+### 7.2 Network Operator implementation
+
+Network Operator has been designed to address Ericsson requirements, and allow managing VLAN pools and maps them to the NetworkAttachmentDefinition.
+
+#### 7.2.1 NadVlanMap Custom Resource
+
+The Ericsson Packet Core application performs VLAN encapsulation inside the Pod network namespace, hence NetworkAttachmentDefinition does not have VLAN ID specified. NAD only refers to the parent uplink interface (in case of MAC VLAN it will be parent interface) or refer to the SRIOV Network Node Policy name and VLAN ID = 0. 
+
+Network Operator exposes Custom Resource named NadVlanMap, which provides mapping between NetworkAttachmentDefinition (NAD) name and possible VLAN ID's that are assumed to be used by PODs connected to the NAD.
+Example manifest of the NadVlanMap:
+
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: NadVlanMap
+metadata:
+  name: nad-vlan-map               # This is singleton resource, must use exact "nad-vlan-map" name
+  namespace: aci-containers-system
+spec:
+  nadVlanMapping:
+    namespace-A/nad-1:       # namespace (fullname match) / NADs prefix name (first letters match)
+      - label: app-1         # Label is not used for matching NAD to VLAN.
+        vlans: "101"
+      - label: app-2
+        vlans: "102"
+      - label: app-3
+        vlans: "103"
+    namespace-A/nad-2:
+      - label: app-1
+        vlans: "101"         # the same vlans can be used by multiple NADs
+      - label: app-2
+        vlans: "102"
+      - label: app-4
+        vlans: "104"
+    namespace-B/nad-1:       # NetworkAttachmentDefinition is a namespaced resource and can duplicate across namespaces
+      - label: app-1
+        vlans: "201"
+```
+
+NadVlanMapping provides list of VLANs to be assigned to the NAD. NAD key is using pattern: `<namespace>/<nad_name_prefix>`
+**&#9432;** ___NOTE:___ _NadVlanMap resource is a singleton (one per cluster) resource and must have a name: “nad-vlan-map”_
+The "label" attribute is not used for matching a specific VLAN to a Network Attachment Definition (NAD)/Pod. Instead, it is utilized by the StaticFabricNetworkAttachment, which will be explained in detail later in the document.
+
+When NetworkAttachmentDefinition resource is created, Network Operator finds matching namespace / NAD name in the NadVlanMap, it creates as many BD/EPG pairs as the number of VLANs in the list for matched namespace/NAD prefix.
+
+If you look at the above NadVlanMap, and you would create NAD with the name: `nad-1` in the namespace `namespace-A`, Network Operator will create BD and EPGs with the following names:
+- ACI Bridge Domains (BD):
+  - secondary-bd-vlan-101
+  - secondary-bd-vlan-102
+  - secondary-bd-vlan-103
+- ACI Endpoint Groups (EPG):
+  - secondary-vlan-101
+  - secondary-vlan-102
+  - secondary-vlan-103
+
+Network Operator creates NodeFabricNetworkAttachment resource - one per NAD and per node. It will incorporate information about allowed VLAN list and reference to the matching entry in NadVlanMap resources. 
+
+Example:
+
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: NodeFabricNetworkAttachment
+metadata:
+  name: worker1.ocpbm3.noiro.local-namespace-A-nad-1
+  namespace: aci-containers-system
+spec:
+  aciTopology:
+    bond1:
+      fabricLink:
+      - topology/pod-1/node-101/pathep-[eth1/40]
+      - topology/pod-1/node-102/pathep-[eth1/40]
+  encapVlan:
+    encapRef:
+      key: namespace-A/nad-1                             # found matching in NadVlanMap
+      nadVlanMap: aci-containers-system/nad-vlan-map     # reference to the NadVlanMap resource
+    vlanList: '[101,102,103]'                            # list of VLANs defined in the NadVlanMap matching the Namespace/NAD prefix
+  networkRef:
+    name: nad-1
+    namespace: namespace-A
+  nodeName: worker1.ocpbm3.noiro.local
+  primaryCni: macvlan
+```
+
+When Pod is created, it is expected that the POD will do VLAN tagging its `netX` interface. Consequently, the provisioning of static paths towards the relevant worker node is carried out across all Endpoint Groups (EPGs) that map the VLAN to that NetworkAttachmentDefinition (NAD).
+
+When multiple NetworkAttachmentDefinitions refers to the same VLAN, and the Network Operator has been provisioned with the `chained_cni_config.use_global_scope_vlan` set to `true`, then Bridge Domain / Endpoint Group will be created only once, and every consecutive NAD that refer to the same VLAN will use exisiting BD EPG for attaching static port. 
+
+Example: 
+
+Network Operator creates NodeFabricNetworkAttachment for NetworkAttachmentDefinition with the name `nad-1` in namepsace `namespace-A`. In addition Pod has been created and attached to the NAD using annotation `"k8s.v1.cni.cncf.io/networks: nad-1"`
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: NodeFabricNetworkAttachment
+metadata:
+  name: worker1.ocpbm3.noiro.local-namespace-A-nad-1
+  namespace: aci-containers-system
+spec:
+  aciTopology:
+    bond1:
+      fabricLink:
+      - topology/pod-1/node-101/pathep-[eth1/40]
+      - topology/pod-1/node-102/pathep-[eth1/40]
+      pods:
+      - localIface: net1                                 
+        podRef:                                          # Reference to the pod attached to the NAD.
+          name: app-1
+          namespace: namespace-A
+  encapVlan:
+    encapRef:
+      key: namespace-A/nad-1                             # found matching in NadVlanMap
+      nadVlanMap: aci-containers-system/nad-vlan-map     # reference to the NadVlanMap resource
+    vlanList: '[101,102,103]'                            # list of VLANs defined in the NadVlanMap matching the Namespace/NAD prefix
+  networkRef:
+    name: nad-1
+    namespace: namespace-A
+  nodeName: worker1.ocpbm3.noiro.local
+  primaryCni: macvlan
+```
+Another NAD - `nad-2` in the same namespace has been created, and Pod attached to it. For those resources, Network Operator creates another `NodeFabricNetworkAttachment` resource. 
+
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: NodeFabricNetworkAttachment
+metadata:
+  name: worker1.ocpbm3.noiro.local-namespace-A-nad-2
+  namespace: aci-containers-system
+spec:
+  aciTopology:
+    ens1f2:                                        
+      fabricLink:
+      - topology/pod-1/node-101/pathep-[eth1/41]  # Discovered fabric interface
+      pods:
+      - localIface: ens1f2v34                     # Pod details with VF interface
+        podRef:
+          name: app-1
+          namespace: namespace-A
+  encapVlan:
+    encapRef:
+      key: namespace-A/nad-2                             # found matching in NadVlanMap
+      nadVlanMap: aci-containers-system/nad-vlan-map     # reference to the NadVlanMap resource
+    vlanList: '[101,102,104]'                            # list of VLANs defined in the NadVlanMap matching the Namespace/NAD prefix (nad-2)
+  networkRef:
+    name: nad-2
+    namespace: namespace-A
+  nodeName: worker1.ocpbm3.noiro.local
+  primaryCni: sriov
+```
+
+Network Operator will create only one new BD/EPG for vlan 104, since it does not overlap with any previously created BD/EPGs. 
+For the Pod, Network Operator will create Static Port in two existing EPGs vlan-101 and vlan-102 refering to the interface Eth1/41 on Leaf 101 and add vlan encapsulation respectively for each EPG. 
+
+#### 7.2.2 FabricVlanPool custom reosource
+
+You can maintain list of VLAN mapping to NADs by editing NadVlanMaps resource, and add/remove vlans, NAD prefixes. This will update the list of EPGs that will be created when new NAD will be created, however, it does not update the VLAN Pool `“<systemID>-secondary”` in Fabric Access Policies. 
+
+After Network Operator installation, acc-provision generates `FabricVlanPool` resource named `“default”` in `aci-containers-system` namespace. It will consists all VLANs specified in the net_config.secondary_vlans list (one of the acc-provision-input parameters), or if the secondary_vlan list is not provided, the VLAN list will be derived from input `nad_vlan_map_input.csv` file.
+Additionally, you can create own resource FabricVlanPool in another namespace and add more vlans to the VLAN Pool in Fabric access policies. 
+The VLAN Pool will be always union of all users defined FabricVlanPools and the default one. 
+
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: FabricVlanPool
+metadata:
+  name: default                      # default FabricVlanPool
+  namespace: aci-containers-system
+spec:
+  vlans:
+  - "101-104"
+  - "201"
+```
+
+You can add more vlans by editing the `default` FabricVlanPool resource, or by creating your own in the namespace where your NAD definition will be created. 
+
+**&#9432;** ___NOTE:___ _when no match will be found for NAD prefix name in the NadVlanMap, Network Operator will create BD/EPGs for each VLAN defined in the FabricVlanPool `default` and FabricVlanPool in the namespace where NAD is created._ 
+
+If multiple application owners requires Network Operator to automate Cisco ACI configuration for their own CNF applications, you can assign VLAN ranges per application owner, and create dedicated FabricVlanPools for each of them in their respective namespaces. You can skip populating `default` FabricVlanPool by not providing `chained_cni_config.secondary_vlan` list nor `chained_cni_config.vlans_file` input file, and leverage only user created `FarbicVlanPool` resources.
+
+#### 7.2.3 External router port attachment
+
+Cisco ACI fabric acts as a layer 2 switched network for a Pod secondary interfaces. Routing to the other subnets will be performed on an external router that should be attached to the same VLAN. To automate attachment of an external gateway uplink to each EPG, the additional Custom Resource has been defined. `StaticFabricNetworkAttachment` is a CRD that matches label from `NadVlanMap` and AAEP where the external router is connected.
+
+Based on above custom resource, Network Operator matches VLAN and EPG name based on label in the `NadVlanMap` and associates it with defined AAEP. There is no static port added to the EPG for the router, just all interfaces that belongs the the AAEP will get programmed a VLAN that matches the label.
+
+**&#9432;** ___NOTE:___ _A prerequisite for this implementation is to dedicate unique AAEP for external router. CNO doesn’t do specific staticPath binding to each epg for external router, rahter it is associating EPG with AAEP in __Fabric -> Access Policies -> Policies -> Global -> Attachable Access Entity Profile__._
+
+Example StaticFabricNetworkAttachment resource:
+
+```yaml
+apiVersion: aci.fabricattachment/v1
+kind: StaticFabricNetworkAttachment
+metadata:
+  name: staticfabricnetworkattachment
+  namespace: aci-containers-system
+spec:
+   nadVlanRefs:
+   - nadVlanLabel: "app-1"   # Option 1: Match EPG based on the label defined in NadVlanMap
+     aeps:
+     - "router-aaep"
+   vlans:
+   - vlans: "101"            # Option 2: Match EPG based on explicit VLAN ID
+     aeps:
+     - "router-aaep"
+```
+VLAN can be directly specified or to a label that is defined in the NadVlanMaps CR to associate an AEP but anyway, it must match to a VLAN that is defined in the FabricVlanPool, otherwise VLAN Pool in APIC won’t have that Vlan and fault will be raised
+
+| ![](diagrams/sfna-diagram.png) |
+|:--:|
+| *StaticFabricNetworkAttachment logical diagram* |
+
+
+#### 7.2.4 VLAN file ingest
+
+Network Operator can load VLAN mapping data at the time of installation from a *.csv. Based on the information provided in the spreadsheet, NadVlanMap manifest will be generated in the acc-provision output file.
+
+| ![Alt text](diagrams/nad_vlan_mapping_excel.png) |
+|:--:|
+| *VLAN spreadsheet format* |
+
+Excel sheet has to be converted to CSV format and path to the file has to be specified in the acc-provision-input.yaml as:
+
+```yaml
+chained_cni_config.vlans_file: "nad_vlan_map_input.csv"
+```
+In this example, `nad_vlan_map_input.csv` has been located in the current directory from which acc-provision will be executed.
+
+the NadVlanMap populated with the information from CSV file will be part of acc-provision-output.yaml
+
+```bash
+acc-provision -a -f openshift-sdn-ovn-baremetal -u admin -p ”password” -c acc_provision_input.yaml -o acc-provision-output.yaml
+```
+## 8. Primary CNI chaining (tech-preview)
+
+**&#9432;** ___NOTE:___ _This is tech-preview feature, not currently supported in production environments._
+
+The CNI chaining for primary CNI (OVN-Kubernetes) has been implemented but turned off by default as Cisco is working with Red Hat on support for CNI chaining for OVN-Kubernetes.
+CNI chaining for primary interface would bring possibility to detect network issues and prevent Pods to be scheduled in case of network would not be ready.
+
+You can enable OVN-Kubernetes CNI chaining with Cisco Network Operator at the time of Cisco Network Operator. 
+Add following configuration options to the acc-provision-input.yaml file:
+- `chained_cni_config.primary_interface_chaining: true` - enable feature
+- `primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf"`- indicate path to the primary CNI configuration file.
+Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes will have additional entry:
+
+```yaml
+[core@worker2 ~]$ cat /run/multus/cni/net.d/10-ovn-kubernetes.conf
+ {
+ 	"name": "ovn-kubernetes",
+ 	"cniVersion": "0.4.0",
+ 	"plugins": [{
+ 		"cniVersion": "0.4.0",
+ 		"name": "ovn-kubernetes",
+ 		"type": "ovn-k8s-cni-overlay",
+ 		"ipam": {},
+ 		"dns": {},
+ 		"logFile": "/var/log/ovn-kubernetes/ovn-k8s-cni-overlay.log",
+ 		"logLevel": "4",
+ 		"logfile-maxsize": 100,
+ 		"logfile-maxbackups": 5,
+ 		"logfile-maxage": 5
+ 	},
+### CNO CNI CHAINING INFORMATION WILL BE ADDED:
+  {
+ 		"supportedVersions": ["0.3.0", "0.3.1", "0.4.0"],
+ 		"type": "netop-cni",
+ 		"chaining-mode": true,
+ 		"log-level": "debug",
+ 		"log-file": "/var/log/netop-agent.log"
+ 	}]
+ }
+ ```
+
+**&#9432;** ___NOTE:___ _enabling CNI chaining on primary interface require restart of multus PODs (the same applies to disabling CNI chaining)_
+```bash
+oc delete pod -n openshift-multus -l app=multus
+```
