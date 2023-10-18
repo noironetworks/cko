@@ -70,9 +70,9 @@ For each network segment, there is a corresponding BD (Bridge Domain) and EPG (E
 
 Explicit physical interface and VLAN attachments are made to the relevant BD and EPG in ACI.
 
-The BDs are configured as L2, so it is expected to connect an external router to each EPG to provide a gateway. CNO has implemented automatic attachment of the external router interface to the EPG based on the configurable mapping.
+The BDs are configured as L2, so it is expected to connect an external router to each EPG to provide a gateway. CNO has implemented automatic attachment of the external router interface to the EPG based on a configurable mapping.
 
-The attachment of pods to the Network Segment is accomplished through the use of Multus Custom Resource called NetworkAttachmentDefinition (short: NAD).
+The attachment of pods to the Network Segment is accomplished through the use of a Multus Custom Resource called NetworkAttachmentDefinition (short: NAD).
 
 | ![](diagrams/CNO-CNF-aci-logical-topology.png) |
 |:--:|
@@ -84,17 +84,18 @@ Network Operator can be installed after deploying an Openshift cluster with the 
 
 To install Network Operator, you can use the [acc-provision](https://pypi.org/project/acc-provision/6.0.3.1/) tool, which will generate Kubernetes manifests and prepares Cisco ACI day-0 configuration. 
 
-Optionally, you can use acc-provision tool to configure Cisco ACI networking for the Openshift cluster connectivity for primary CNI.
+Optionally, you can use acc-provision tool to pre-provision Cisco ACI networking for the Openshift cluster connectivity for primary CNI.
 
-Network Operator runs as a pods on Openshift cluster in the `aci-containers-system` namespace. Network Operator consists of following components:
+Network Operator runs as a pods in the Openshift cluster inside the `aci-containers-system` namespace. Network Operator consists of following components:
 
-* One pod aci-containers-controller deployment. It is responsible to subscribe to APIC selected objects and push configuration to APIC
+* One pod aci-containers-controller deployment. It's main functions are:
+  * subscribe to APIC selected objects and push configuration to APIC
+  * Read the `nodenetworkstates.nmstate.io` CRD to discovers secondary connections using LLDP
 * aci-container—host daemonset running on every node. 
-* aci-containers-host pod consists of 1 container - hostAgent which has following functions:
-  * discovers secondary connections using LLDP
-  * watch for NetworkAttachmentDefinitions
-  * watch for Pods with additional network attachments
-  * generates NodeFabricNetworkAttachment CR and other supplemental CRs explained later.
+  * it consists of 1 container - hostAgent which has following functions:
+    * watch for NetworkAttachmentDefinitions
+    * watch for Pods with additional network attachments
+    * generates NodeFabricNetworkAttachment CR and other supplemental CRs explained later.
 
 ![Network Operator  software architecture](diagrams/netop-cni-architecture.png)
 
@@ -102,22 +103,23 @@ Network Operator runs as a pods on Openshift cluster in the `aci-containers-syst
 
 ### 5.1 Network Operator installation pre-requisites
 
-Before installation of the chained CNI to automate ACI fabric stitching for secondary interfaces, following pre-requisites must be ensured:
+Before installation of the chained CNI to automate ACI fabric stitching for secondary interfaces, the following pre-requisites must be met:
 
-1.	Installed Openshift on Baremetal (validated installation methods: assisted-installer or UPI with PXE boot). Validated Openshift version: 4.12
-2.	Installed operators:
+1.	Install Openshift on Baremetal (validated installation methods: assisted-installer or UPI with PXE boot). Validated Openshift version: 4.12
+2.	Install the following operators:
     * Multus (Openshift installation enables by default installation of multus)
     * SRIOV Operator
     * NMstate Operator
     * Ensure that LLDP is disabled on the NIC firmware
       * i.e. for Intel X710 `ethtool --set-priv-flags <eth_name> disable-fw-lldp on`
+      * Note: This configuration should be implemented with a `machineconfig` otherwise will not persist between reboots
     * Enable LLDP on the node uplink interfaces designed for secondary interfaces.
       * i.e. using [nmstate](https://nmstate.io/features/lldp.html) operator
 
 
 ### 5.2. Network Operator installation
 
-1. Install acc-provision on the host that has access to APIC.
+1. Install acc-provision on a host that has access to APIC.
 
     `pip install acc-provision==6.0.3.1`
 
@@ -125,7 +127,7 @@ Before installation of the chained CNI to automate ACI fabric stitching for seco
 
 ```yaml
 aci_config:
-  system_id: ocpbm3                   # Every opflex cluster must have a distinct ID
+  system_id: ocpbm3                   # Unique cluster name, if the Tenant is not specified this is also the tenant name
   tenant:
     name: ocpbm3                      # Add pre_existing_tenant name if it's manually created on the APIC
   apic_hosts:                         # List of APIC hosts to connect for APIC API
@@ -150,8 +152,8 @@ chained_cni_config:
   secondary_interface_chaining: true   # enable chained config
   use_global_scope_vlan: true              # use unique VLANs per leaf switch.
   skip_node_network_provisioning: true     # if true, Cisco CNI do not provision EPG/BD for node network (must be provisioned before Openshift cluster will be installed).
-  vlans_file: "nad_vlan_map_input.csv"  # path to the CSV file with the VLAN information.
-  # primary_interface_chaining: false      # (optional) enable CNI chaining for primary CNI – Network Operator will check connectivity to gateway prior allowing Pod to start. Currently not 		supported by Red Hat.
+  vlans_file: "nad_vlan_map_input.csv"     # path to the CSV file with the VLAN information.
+  # primary_interface_chaining: false      # (optional) enable CNI chaining for primary CNI – Network Operator will check connectivity to gateway prior allowing Pod to start. Currently not supported by Red Hat.
   # primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf” # (optional) if specified, primary CNI will be chained as well – this is not required by current use-case.
   secondary_vlans: [101,102,103,104,201]   # (optional) definite list of all vlans that should be populated in VLAN Pool for secondary intefaces
 
@@ -166,11 +168,11 @@ registry:                                  # Registry information
 You can create new Tenant or use pre-existing one:
 ```yaml
 aci_config:
-  system_id: ocpbm3        # Every opflex cluster must have a distinct ID
+  system_id: ocpbm3        # Unique cluster name, if the Tenant is not specified this is also the tenant name
   tenant:
     name: ocpbm3           # Add pre_existing_tenant name if it's manually created on the APIC
 ```
-* 2 AAEPs should be created befor running acc-provision (as prerequisite):
+* 2 AAEPs should be created before running acc-provision (prerequisite):
   * `aci_config.aep` - AAEP for primary CNI interfaces
   * `aci_config.secondary_aep` - AAEP for secondary CNI interface
 * 2 Physical Domains (can be provided or if not specified, will be created):
@@ -183,6 +185,8 @@ aci_config:
 * `chained_cni_config.secondary_vlans` – List of VLANs used by CNO to provision VLAN Pool attached to <system_id>-secondary physical domain. This domain is attached to the EPGs created by CNO. If ip_sheet is specified, the vlan pool can be populated from the excel sheet.
 
 4. Run acc-provision on the host that has access to APIC. Script will generate output file. 
+
+   __Warning__: This steps will push configuration to APIC
 
 ```bash
 acc-provision -a -c acc-provision-config.yml -u <apic_user> -p <apic_password> -f openshift-sdn-ovn-baremetal -o acc_deployment.yaml
@@ -252,7 +256,7 @@ spec:
   nicSelector:
     deviceID: 158b
     pfNames:
-    - enp216s0f0#0-15
+    - enp216s0f0#0-63
     rootDevices:
     - 0000:d8:00.0
     vendor: "8086"
@@ -316,10 +320,9 @@ spec:
     ]
 }
 ```
-Once NAD is created, Network Operator creates Bridge Domain / Endpoint Group in Cisco ACI for the VLAN specified in the NetworkAttachmentDefinition. Name of EPG is partially hardcoded: 
-`secondary-vlan-<vlanID>`. Name of BD is partially hardcoded: `secondary-bd-vlan-<vlanID>`
-
-VLAN ID can be specified in the raw SR-IOV config in the NAD (.spec.config.plugins[?(@.type=="sriov")]["vlan"]) - this will result in assignment VLAN directly to the VF. Encapsulation in the VLAN will be offloaded to the NIC card. 
+Once NAD is created Network Operator creates Bridge Domain / Endpoint Group in Cisco ACI for the VLAN specified in the NetworkAttachmentDefinition. The name of EPG and BD are hardcoded using the following schema: 
+* `secondary-vlan-<vlanID>`
+* `secondary-bd-vlan-<vlanID>`
 
 | ![](diagrams/quick-start-epg-603.png)
 |:--:|
@@ -383,7 +386,6 @@ spec:
     image: wbitt/network-multitool
   nodeName: worker1.ocpbm3.noiro.local
 ```
-
 
 Pod scheduled on specific worker node (worker1). Network Operator configure Static Path towards the node that runs a Pod attached to the NAD.
 The interface is taken from NodeFabricNetworkAttachment Custom Resource. 
@@ -515,7 +517,7 @@ spec:
     image: wbitt/network-multitool
   nodeName: worker2.ocpbm3.noiro.local
 ```
-NodeFabricNetworkAttachment resource created for NAD `macvlan-net2-bond1-604`
+Network Operator will create a NodeFabricNetworkAttachment resource based on the NAD `macvlan-net2-bond1-604`
 
 ```yaml
 apiVersion: aci.fabricattachment/v1
@@ -590,7 +592,7 @@ Network Operator has been designed to address Ericsson requirements, and allow m
 
 #### 7.2.1 NadVlanMap Custom Resource
 
-The Ericsson Packet Core application performs VLAN encapsulation inside the Pod network namespace, hence NetworkAttachmentDefinition does not have VLAN ID specified. NAD only refers to the parent uplink interface (in case of MAC VLAN it will be parent interface) or refer to the SRIOV Network Node Policy name and VLAN ID = 0. 
+The Ericsson Packet Core application performs VLAN encapsulation inside the Pod network namespace, hence NetworkAttachmentDefinition does not have a VLAN ID specified. NAD only refers to the parent uplink interface (in case of MAC VLAN it will be parent interface) or refer to the SRIOV Network Node Policy name and VLAN ID = 0. 
 
 Network Operator exposes Custom Resource named NadVlanMap, which provides mapping between NetworkAttachmentDefinition (NAD) name and possible VLAN ID's that are assumed to be used by PODs connected to the NAD.
 Example manifest of the NadVlanMap:
@@ -623,7 +625,7 @@ spec:
 ```
 
 NadVlanMapping provides list of VLANs to be assigned to the NAD. NAD key is using pattern: `<namespace>/<nad_name_prefix>`
-**&#9432;** ___NOTE:___ _NadVlanMap resource is a singleton (one per cluster) resource and must have a name: “nad-vlan-map”_
+**&#9432;** ___NOTE:___ _NadVlanMap resource is a singleton (one per cluster) resource and its name must be: “nad-vlan-map”_
 The "label" attribute is not used for matching a specific VLAN to a Network Attachment Definition (NAD)/Pod. Instead, it is utilized by the StaticFabricNetworkAttachment, which will be explained in detail later in the document.
 
 When NetworkAttachmentDefinition resource is created, Network Operator finds matching namespace / NAD name in the NadVlanMap, it creates as many BD/EPG pairs as the number of VLANs in the list for matched namespace/NAD prefix.
@@ -739,7 +741,7 @@ For the Pod, Network Operator will create Static Port in two existing EPGs vlan-
 You can maintain list of VLAN mapping to NADs by editing NadVlanMaps resource, and add/remove vlans, NAD prefixes. This will update the list of EPGs that will be created when new NAD will be created, however, it does not update the VLAN Pool `“<systemID>-secondary”` in Fabric Access Policies. 
 
 After Network Operator installation, acc-provision generates `FabricVlanPool` resource named `“default”` in `aci-containers-system` namespace. It will consists all VLANs specified in the net_config.secondary_vlans list (one of the acc-provision-input parameters), or if the secondary_vlan list is not provided, the VLAN list will be derived from input `nad_vlan_map_input.csv` file.
-Additionally, you can create own resource FabricVlanPool in another namespace and add more vlans to the VLAN Pool in Fabric access policies. 
+You can create additional FabricVlanPool CRDs in another namespace and add more vlans to the VLAN Pool in Fabric access policies. 
 The VLAN Pool will be always union of all users defined FabricVlanPools and the default one. 
 
 ```yaml
@@ -817,11 +819,10 @@ acc-provision -a -f openshift-sdn-ovn-baremetal -u admin -p ”password” -c ac
 
 **&#9432;** ___NOTE:___ _This is tech-preview feature, not currently supported in production environments._
 
-The CNI chaining for primary CNI (OVN-Kubernetes) has been implemented but turned off by default as Cisco is working with Red Hat on support for CNI chaining for OVN-Kubernetes.
-CNI chaining for primary interface would bring possibility to detect network issues and prevent Pods to be scheduled in case of network would not be ready.
+The CNI chaining for primary CNI (OVN-Kubernetes) has been implemented but turned off by default while Cisco is working with Red Hat to certify CNI chaining for OVN-Kubernetes.
+CNI chaining for primary interface add the capability to detect network issues and prevent Pods scheduling while the networing is not ready.
 
-You can enable OVN-Kubernetes CNI chaining with Cisco Network Operator at the time of Cisco Network Operator. 
-Add following configuration options to the acc-provision-input.yaml file:
+You can enable OVN-Kubernetes CNI chaining with Cisco Network Operator by adding following configuration options to the acc-provision-input.yaml file:
 - `chained_cni_config.primary_interface_chaining: true` - enable feature
 - `primary_cni_path: "/mnt/cni-conf/cni/net.d/10-ovn-kubernetes.conf"`- indicate path to the primary CNI configuration file.
 Once CNI chaining is enabled for primary interface and Network Operator deployed on the cluster, all nodes multus configuration for ovn-kubernetes located in each node filesystem: (`/run/multus/cni/net.d/10-ovn-kubernetes.conf`) will have additional entry:
