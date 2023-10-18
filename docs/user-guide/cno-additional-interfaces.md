@@ -13,7 +13,7 @@
   - [5.2. Network Operator installation](#52-network-operator-installation)
 - [6. Network Operator - quick start guide](#6-network-operator---quick-start-guide)
   - [6.1 Network Operator - orchestrate fabric configurartion for SR-IOV interfaces connected to POD](#61-network-operator---orchestrate-fabric-configurartion-for-sr-iov-interfaces-connected-to-pod)
-  - [6.2 Network Operator - orchestrate fabric configurartion for MACVLAN interfaces connected to POD](#62-network-operator---orchestrate-fabric-configurartion-for-macvlan-interfaces-connected-to-pod)
+  - [6.3 Network Operator - orchestrate fabric configurartion for MACVLAN interfaces connected to POD](#62-network-operator---orchestrate-fabric-configurartion-for-macvlan-interfaces-connected-to-pod)
 - [7. Custom features for Ericsson Packet Core support](#7-custom-features-for-ericsson-packet-core-support)
   - [7.1 Custom requirements](#71-custom-requirements)
   - [7.2 Network Operator implementation](#72-network-operator-implementation)
@@ -316,8 +316,10 @@ spec:
     ]
 }
 ```
-Once NAD is created Network Operator creates Bridge Domain / Endpoint Group in Cisco ACI for the VLAN specified in the NetworkAttachmentDefinition. Name of EPG is partially hardcoded: 
+Once NAD is created, Network Operator creates Bridge Domain / Endpoint Group in Cisco ACI for the VLAN specified in the NetworkAttachmentDefinition. Name of EPG is partially hardcoded: 
 `secondary-vlan-<vlanID>`. Name of BD is partially hardcoded: `secondary-bd-vlan-<vlanID>`
+
+VLAN ID can be specified in the raw SR-IOV config in the NAD (.spec.config.plugins[?(@.type=="sriov")]["vlan"]) - this will result in assignment VLAN directly to the VF. Encapsulation in the VLAN will be offloaded to the NIC card. 
 
 | ![](diagrams/quick-start-epg-603.png)
 |:--:|
@@ -549,6 +551,27 @@ Based on the Ethernet ports discovered by Network Operator, The Virtual Port Cha
 | ![Alt text](diagrams/static-port-epg.png) |
 |:--:|
 | *Static Port for VPC interface automatically discovered* |
+
+### 6.3 Provisioning multiple VLANs within the same NetworkAttachmentDefiniton
+
+NetworkAttachmentDefinition allows to specify VLAN ID in multiple ways, depending on the defined plugin CNI. For SR-IOV CNI, you can specify vlan ID in the plugins.vlan field - this will configure VLAN ID for the VF on the NIC card directly and NIC card will encapsulate traffic from the attached Pod on the wire.
+In many 5G CNF use-cases, encapsulation is done on the Pod itself, and VF should be treated as a trunk allowing list of VLANs. 
+Network Operator allows that configuration through annotation or reference to the resource "nad-vlan-map". The last one has been developed for specific use-case and is described in [Chapter 7.2.1](#721-nadvlanmap-custom-resource).
+The standard way of configuring VLAN list for the NAD, and thus, Network Operator provisions appropriate network segments on Cisco ACI fabric, is through the annotations:
+
+```yaml
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net1
+  namespace: default
+  annotations:
+    netop-cni.cisco.com/vlans: ‘[100,103,106-108]’ 
+    k8s.v1.cni.cncf.io/resourceName: openshift.io/<resourceName>
+```
+
+Above configurartion results in creating 5 BD/EPG in ACI for vlan: 100, 103, 106, 107, 108. When Pod will be attached to this NAD, the static binding will be created for each EPG created for each vlan from this list. Since it is unknown which VLAN a Pod will choose to encapsulate traffic, all vlans are allowed and provisioned for any pod attached to this NAD.
+
 
 ## 7. Custom features for Ericsson Packet Core support
 
