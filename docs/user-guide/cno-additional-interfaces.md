@@ -558,10 +558,14 @@ Based on the Ethernet ports discovered by Network Operator, The Virtual Port Cha
 ### 6.3 Provisioning multiple VLANs within the same NetworkAttachmentDefiniton
 
 NetworkAttachmentDefinition allows to specify VLAN ID in multiple ways, depending on the defined plugin CNI. For SR-IOV CNI, you can specify vlan ID in the plugins.vlan field - this will configure VLAN ID for the VF on the NIC card directly and NIC card will encapsulate traffic from the attached Pod on the wire.
-In many 5G CNF use-cases, encapsulation is done on the Pod itself, and VF should be treated as a trunk allowing list of VLANs. 
-Network Operator allows that configuration through annotation or reference to the resource "nad-vlan-map". The last one has been developed for specific use-case and is described in [Chapter 7.2.1](#721-nadvlanmap-custom-resource).
-The standard way of configuring VLAN list for the NAD, and thus, Network Operator provisions appropriate network segments on Cisco ACI fabric, is through the annotations:
 
+In many 5G CNF use-cases, encapsulation is done on the Pod itself, and VF should be treated as a trunk allowing list of VLANs. 
+
+Network Operator allows that configuration through annotation or reference to the resource "nad-vlan-map". The last one has been developed for specific use-case and is described in [Chapter 7.2.1](#721-nadvlanmap-custom-resource).
+
+The standard way of configuring VLAN list for the NAD is done through annotations. Network Operator provisions appropriate network segments on Cisco ACI fabric - for each VLAN pair of BD/EPG.
+
+Example: 
 ```yaml
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
