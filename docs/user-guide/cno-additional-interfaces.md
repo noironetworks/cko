@@ -631,7 +631,7 @@ spec:
 
 NadVlanMapping provides list of VLANs to be assigned to the NAD. NAD key is using pattern: `<namespace>/<nad_name_prefix>`
 **&#9432;** ___NOTE:___ _NadVlanMap resource is a singleton (one per cluster) resource and its name must be: “nad-vlan-map”_
-The "label" attribute is not used for matching a specific VLAN to a Network Attachment Definition (NAD)/Pod. Instead, it is utilized by the StaticFabricNetworkAttachment, which will be explained in detail later in the document.
+The "label" attribute is not used for matching a specific VLAN to a Network Attachment Definition (NAD)/Pod. Instead, it is utilized by the NetworkFabricNetworkConfiguration, which will be explained in detail later in the document.
 
 When NetworkAttachmentDefinition resource is created, Network Operator finds matching namespace / NAD name in the NadVlanMap, it creates as many BD/EPG pairs as the number of VLANs in the list for matched namespace/NAD prefix.
 
@@ -769,19 +769,19 @@ If multiple application owners requires Network Operator to automate Cisco ACI c
 
 #### 7.2.3 External router port attachment
 
-Cisco ACI fabric acts as a layer 2 switched network for a Pod secondary interfaces. Routing to the other subnets will be performed on an external router that should be attached to the same VLAN. To automate attachment of an external gateway uplink to each EPG, the additional Custom Resource has been defined. `StaticFabricNetworkAttachment` is a CRD that matches label from `NadVlanMap` and AAEP where the external router is connected.
+Cisco ACI fabric acts as a layer 2 switched network for a Pod secondary interfaces. Routing to the other subnets will be performed on an external router that should be attached to the same VLAN. To automate attachment of an external gateway uplink to each EPG, the additional Custom Resource has been defined. `NetworkFabricConfiguration` is a CRD that matches label from `NadVlanMap` and AAEP where the external router is connected.
 
 Based on above custom resource, Network Operator matches VLAN and EPG name based on label in the `NadVlanMap` and associates it with defined AAEP. There is no static port added to the EPG for the router, just all interfaces that belongs the the AAEP will get programmed a VLAN that matches the label.
 
 **&#9432;** ___NOTE:___ _A prerequisite for this implementation is to dedicate unique AAEP for external router. CNO doesn’t do specific staticPath binding to each epg for external router, rahter it is associating EPG with AAEP in __Fabric -> Access Policies -> Policies -> Global -> Attachable Access Entity Profile__._
 
-Example StaticFabricNetworkAttachment resource:
+Example NetworkFabricConfiguration resource:
 
 ```yaml
 apiVersion: aci.fabricattachment/v1
-kind: StaticFabricNetworkAttachment
+kind: NetworkFabricConfiguration
 metadata:
-  name: staticfabricnetworkattachment
+  name: networkfabricconfiguration
   namespace: aci-containers-system
 spec:
    nadVlanRefs:
@@ -795,9 +795,9 @@ spec:
 ```
 VLAN can be directly specified or to a label that is defined in the NadVlanMaps CR to associate an AEP but anyway, it must match to a VLAN that is defined in the FabricVlanPool, otherwise VLAN Pool in APIC won’t have that Vlan and fault will be raised
 
-| ![](diagrams/sfna-diagram.png) |
+| ![](diagrams/nfc-diagram.png) |
 |:--:|
-| *StaticFabricNetworkAttachment logical diagram* |
+| *NetworkFabricConfiguration logical diagram* |
 
 
 #### 7.2.4 VLAN file ingest
