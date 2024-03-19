@@ -1153,12 +1153,17 @@ VLAN can be directly specified or to a label that is defined in the NadVlanMaps 
 
 #### 8.2.4 Custom EPG and BD Configuration
 
-Additionally NetworkFabricConfiguration CR can also be used to:
-- provide custom names for EPG, BD
-- use a different tenant for BD, EPG
-- associate EPG with contracts as consumer/provider
-- associate subnets with BD
-- associate VRF in common or same tenant with BD
+NetworkFabricConfiguration CR can also be used to:
+- provide custom names for EPG, BD when using vlan references directly [Doesn't work for NadVlanLabel reference].
+- associate a different tenant for BD, EPG.
+- associate EPG with contracts as consumer/provider.
+- associate subnets with BD. Note that subnet with Gateway address has to be provided.[eg. Not 10.2.0.0/24 rather 10.2.0.1/24]
+- associate VRF in common or same tenant with BD. 
+
+Assuming that the user has pre-created the following new objects mentioned in the CR in ACI.
+  - Tenant (other than the one provisioned through acc-provision) and Application profile (netop-systemid) in that tenant
+  - VRF
+  - Contracts
 
 Note that the additional functionality above will only be operational after the vlan is used by a NAD.
 Please see the following populated CR for an example
