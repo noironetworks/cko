@@ -318,7 +318,7 @@ spec:
                 "0.3.1",
                 "0.4.0"
             ],
-            "type": "opflex-agent-cni",
+            "type": "netop-cni",
             "chaining-mode": true,
             "log-level": "debug",
             "log-file": "/var/log/netopcni.log"
@@ -495,10 +495,10 @@ spec:
                 "0.3.1",
                 "0.4.0"
             ],
-            "type": "opflex-agent-cni",
+            "type": "netop-cni",
             "chaining-mode": true,
             "log-level": "debug",
-            "log-file": "/var/log/opflexagentcni.log"
+            "log-file": "/var/log/netopcni.log"
         }
     ]
 }
@@ -640,10 +640,10 @@ spec:
                 "0.3.1",
                 "0.4.0"
             ],
-            "type": "opflex-agent-cni",
+            "type": "netop-cni",
             "chaining-mode": true,
             "log-level": "debug",
-            "log-file": "/var/log/opflexagentcni.log"
+            "log-file": "/var/log/netopcni.log"
         }]}'
 ```
 Network Operator reacts to the NetworkAttachmentDefinition create event, and will create NodeFabricNetworkAttachment for that specific NAD - again, one per node where the NAD is applicable. Network Operator will also push BD and EPG for VLAN-103 to the APIC.
@@ -755,7 +755,7 @@ spec:
               "0.3.1",
               "0.4.0"
           ],
-          "type": "opflex-agent-cni",
+          "type": "netop-cni",
           "chaining-mode": true,
         }
        ]}'
