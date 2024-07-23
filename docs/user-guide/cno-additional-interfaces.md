@@ -1154,7 +1154,7 @@ VLAN can be directly specified or to a label that is defined in the NadVlanMaps 
 #### 8.2.4 Custom EPG and BD Configuration
 
 NetworkFabricConfiguration CR can also be used to:
-- provide custom names for EPG, BD when using vlan references directly [Doesn't work for NadVlanLabel reference].
+- provide custom names for ApplicationProfile, EPG, BD when using vlan references directly [Doesn't work for NadVlanLabel reference].
 - associate a different tenant for BD, EPG.
 - associate EPG with contracts as consumer/provider.
 - associate subnets with BD. Note that subnet with Gateway address has to be provided.[eg. Not 10.2.0.0/24 rather 10.2.0.1/24]
@@ -1182,6 +1182,7 @@ spec:
      - "router-aaep"
      epg:
        name: custom-epg1
+       applicationProfile: custom-ap1
        bd:
          name: custom-bd1
          common-tenant: false
