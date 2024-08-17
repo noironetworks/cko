@@ -29,6 +29,12 @@
     - [8.2.4 Custom EPG and BD Configuration](#824-Custom-EPG-and-BD-Configuration)
     - [8.2.5 VLAN file ingest](#825-vlan-file-ingest)
 - [9. Primary CNI chaining (tech-preview)](#9-primary-cni-chaining-tech-preview)
+- [10. Network Operator - orchestrate fabric for router pods using additional interfaces](#10-network-operator---orchestrate-fabric-for-router-pods-using-additional-interfaces)
+  - [10.1 Using pre-existing ACI L3Out](#101-using-pre-existing-aci-l3out)
+  - [10.2 Using generated ACI L3Out](#102-using-generated-aci-l3out)
+  - [10.3 Kubernetes node to ACI leaf peer mapping](#103-kubernetes-node-to-aci-leaf-peer-mapping)
+  - [10.4 Webhook based environment variable insertion for router pods ](#104-webhook-based-environment-variable-insertion-for-router-pods)
+  - [10.5 Caveats](#105-Caveats)
 
 ## 1. Overview
 
@@ -1263,3 +1269,268 @@ Once CNI chaining is enabled for primary interface and Network Operator deployed
 ```bash
 oc delete pod -n openshift-multus -l app=multus
 ```
+## 10. Network Operator - orchestrate fabric for router pods using additional interfaces
+
+This model allows pods that have additional interfaces using any of the CNIs in sections  6.1 - 6.5 to peer with the ACI Fabric.
+BGP is supported as the peering protocol as this is commonly used in container functions.
+Using the `NetworkFabricL3Configuration` CR, user can specify which encap needs to be orchestrated as a router pod network
+that can peer with the ACI Fabric. This CR is cluster scoped. If this vlan is chosen by the NAD in which pods come up, then an SVI will map to the NAD.
+Note that secondary subnets can be configured under the subnets section. L3Out instance specific configuration can be done under vrf/tenant/l3out.
+
+Both SVI types – floating and conventional are supported. 
+Note that Floating L3Out has an anchor node limit set to 6 and ACI nodes added after this, will be considered non-anchor nodes.
+For conventional SVI, maximum nodes setting defaults to 10 and can be changed directly in the NetworkFabricL3Configuration CR.
+VRF and Tenant are always required to be pre-existing.
+Two workflows are possible as part of the L3 design for CNO. 
+
+Workflow 1: corresponds to pre-created l3out by user. This means all the traditional l3out configuration that is not tied to actual l3out physical link, like route-maps, external epgs would be configured by customer. Actual l3out physical link and nodes under node profile would be configured by the `NetworkFabricL3Configuration` CR.
+
+Workflow 2: corresponds to l3out created by CNO. Entire config that is traditionally under an ACI L3Out instance can be configured with the `NetworkFabricL3Configuration` CR.
+
+### 10.1 Using pre-existing ACI L3Out
+
+Following CR creates a floating svi on pre-existing l3out pre-l3out-1 in common ACI tenant and pre-existing vrf pre-vrf-1.
+This is the preferred workflow as it is likely that user has an external peering connection on the same SVI and/or other custom config,
+not all of which may be available in the `NetworkFabricL3Configuration` CR.
+This is minimal config, more fields can be found looking at the `NetworkFabricL3Configuration` CRD.
+```
+apiVersion: aci.fabricattachment/v1
+kind: NetworkFabricL3Configuration
+metadata:
+  name: networkfabricl3configuration
+spec:
+  vrfs:
+  - directlyConnectedNetworks:
+    - bgpPeerPolicy:
+        enabled: true
+        peerASN: 64515
+      encap: 102
+      l3OutName: pre-l3out-1
+      l3OutOnCommonTenant: true
+      primarySubnet: 192.168.100.0/24
+      # Use type as svi for conventional svi
+      sviType: floating_svi
+      useExistingL3Out: true
+    vrf:
+      common-tenant: true
+      name: pre-vrf-1
+
+```
+In response, CNO will show the related configuration that has been pushed to the APIC in the CR's status.
+The status below shows that atleast one NAD used the vlan 102 and this caused the floating SVI to be created in
+ACI. The nodes that were part of the static path associated with that NAD were leaf 101 and 102 and they were added to the l3out as L3Out router nodes.
+Pods that come up on this NAD can peer with ACI leaf nodes 101 and 102 with the addresses  192.168.100.247 and 192.168.100.248 using ASN 64515.
+More on which addresses, pods should use to peer, will follow in section 10.4.
+```
+...
+status:
+  vrfs:
+  - directlyConnectedNetworks:
+    - bgpPeerPolicy:
+        enabled: true
+        peerASN: 64515
+        secret:
+          name: ""
+          namespace: ""
+      encap: 102
+      l3OutName: pre-l3out-1
+      l3OutOnCommonTenant: true
+      nodes:
+      - nodeRef:
+          nodeId: 101
+          podId: 1
+        primaryAddress: 192.168.100.247/24
+      - nodeRef:
+          nodeId: 102
+          podId: 1
+        primaryAddress: 192.168.100.248/24
+      primarySubnet: 192.168.100.0/24
+      subnets:
+      - connectedSubnet: 192.168.100.0/24
+        floatingAddress: 192.168.100.254/24
+        secondaryAddress: 192.168.100.253/24
+      sviType: floating_svi
+      useExistingL3Out: true
+    tenants:
+    - commonTenant: true
+      - name: pre-l3out-1
+        podRef:
+          podId: 1
+        rtrNodes:
+        - nodeRef:
+            nodeId: 101
+            podId: 1
+          rtrId: 101.101.0.101
+        - nodeRef:
+            nodeId: 102
+            podId: 1
+          rtrId: 102.102.0.102
+    vrf:
+      common-tenant: true
+      name: pre-vrf-1
+```
+
+### 10.2 Using generated ACI L3Out
+
+Following CR creates a conventional svi on a new l3out auto-l3out-1 in common ACI tenant and pre-existing vrf pre-vrf-1.
+This is minimal config, more fields can be found looking at the `NetworkFabricL3Configuration` CRD.
+```
+apiVersion: aci.fabricattachment/v1
+kind: NetworkFabricL3Configuration
+metadata:
+  name: networkfabricl3configuration
+spec:
+  vrfs:
+  - directlyConnectedNetworks:
+     - bgpPeerPolicy:
+        enabled: true
+        peerASN: 64516
+      encap: 103
+      l3OutName: auto-l3out-1
+      l3OutOnCommonTenant: true
+      primarySubnet: 192.168.120.0/24
+      sviType: svi
+    tenants:
+    - commonTenant: true
+      l3OutInstances:
+      - externalEpgs:
+        - name: default
+          policyPrefixes:
+          # At least one policyprefix is needed for forwarding to work.
+          # Should include the subnet that is required, unlikely to be 0.0.0.0/0
+          - subnet: 0.0.0.0/0
+        name: auto-l3out-1
+        podRef:
+          podId: 1
+    vrf:
+      common-tenant: true
+      name: pre-vrf-1
+```
+In response, CNO will show the related configuration that has been pushed to the APIC in the CR's status.
+The status below shows that atleast one NAD used the vlan 103 and this caused the conventional SVI to be created in
+ACI. The nodes that were part of the static path associated with that NAD were leaf 101 and 102 and they were added to the l3out as L3Out router nodes along with the static path. Pods that come up on this NAD can peer with ACI leaf nodes 101 and 102 with the addresses 192.168.120.243 and 192.168.120.244 using ASN 64516.
+More on which addresses, pods should use to peer, will follow in section 10.4.
+```
+...
+status:
+  vrfs:
+    - directlyConnectedNetworks:
+      - bgpPeerPolicy:
+          enabled: true
+          peerASN: 64516
+          secret:
+            name: ""
+            namespace: ""
+        encap: 103
+        l3OutName: auto-l3out-1
+        l3OutOnCommonTenant: true
+        nodes:
+        - nodeRef:
+            nodeId: 102
+            podId: 1
+          primaryAddress: 192.168.120.244/24
+        - nodeRef:
+            nodeId: 101
+            podId: 1
+          primaryAddress: 192.168.120.243/24
+        primarySubnet: 192.168.120.0/24
+        subnets:
+        - connectedSubnet: 192.168.120.0/24
+          secondaryAddress: 192.168.120.253/24
+        sviType: svi
+      tenants:
+      - commonTenant: true
+        l3OutInstances:
+        - externalEpgs:
+          - contracts: {}
+            name: default
+            policyPrefixes:
+            - subnet: 0.0.0.0/0
+          name: auto-l3out-1
+          podRef:
+            podId: 1
+          rtrNodes:
+          - nodeRef:
+              nodeId: 102
+              podId: 1
+            rtrId: 102.102.0.102
+          - nodeRef:
+              nodeId: 101
+              podId: 1
+            rtrId: 101.101.0.101
+      vrf:
+        common-tenant: true
+        name: pre-vrf-1
+```
+### 10.3 Kubernetes node to ACI leaf peer mapping
+
+In response to the `NetworkFabricL3Configuration` CR, CNO also publishes a status only cluster-scoped CR called `NodeFabricNetworkL3Peer`.
+This CR shows the mapping of a k8s Node when used in the context of a NAD to the corresponding ACI L3Out Node. Considering only the config in section 10.1, the
+resulting CR will look like below. This means that pods on  k8s nodes k8s-node1 and k8s-node2 can peer with fabric l3out nodes node-101 and node-102, while using encap 102 and the corresponding peerInfo under the fabric node.
+
+```
+apiVersion: aci.fabricattachment/v1
+kind: NodeFabricNetworkL3Peer
+metadata:
+  name: nodefabricnetworkl3peer
+status:
+  nadRefs:
+  - nad:
+      name: macvlan-net2
+      namespace: default
+    nodes:
+    - fabricL3Peers:
+      - encap: 102
+        fabricNodeIds:
+        - 101
+        - 102
+        podId: 1
+      nodeName: k8s-node1
+    - fabricL3Peers:
+      - encap: 102
+        fabricNodeIds:
+        - 101
+        - 102
+        podId: 1
+      nodeName: k8s-node2
+  peeringInfo:
+  - asn: 64515
+    encap: 102
+    fabricNodes:
+    - nodeRef:
+        nodeId: 102
+        podId: 1
+      primaryAddress: 192.168.100.248/24
+    - nodeRef:
+        nodeId: 101
+        podId: 1
+      primaryAddress: 192.168.100.247/24
+    secret:
+      name: ""
+      namespace: ""
+
+```
+
+### 10.4 Webhook based environment variable insertion for router pods
+
+Fabric peering information that a specific pod can use, can be published as environment variables using the webhook in CNO. Webhook uses the 
+`NodeFabricNetworkL3Peer` CR mentioned in section 10.3.
+To enable this functionality, required pod should be annotated with `netop-cni.cisco.com/fabric-l3peer-inject: <list of comma-separated NAD names needing insertion>`.
+In addition, the container that needs environment variables needs to be named with the suffix `fabric-peer`. This suffix can be configured through
+acc-provision. Using the example in section 10.1, when the pod comes up using the specific NAD(macvlan-net2), the following environment variables will be injected into the relevant pod.
+ 
+```
+BGP_PEERING_ENDPOINTS_MACVLAN-NET2=192.168.100.247/24,192.168.100.248/24
+BGP_ASN_MACVLAN-NET2=64515
+BGP_SECRET_PATH_MACVLAN-NET2=
+```
+
+Note that in case of floating svi, in case the pod comes up on a k8s node that is not directly connected to any ACI leaf with a primary address configured ( k8s node connected to non-anchor node), then all the anchor node peers will be published in the list.  
+
+### 10.5 Caveats
+
+* BGP Route-maps are not configurable through the CR as the options are numerous and making entire set available in the CR, may not be practical.
+Based on user feedback, most common options can be made available.
+* In case of floating svi, an affinity can be set for a k8s node with a fabric anchor node, so only those addresses appear in the injected environment variables, instead of publishing all the anchor node addresses as is currently the case. This would be taken up in a future release.   
+* While it is possible to use more than one vlan inside a NAD, the pod that uses this NAD needs to pick a vlan to use, in order for the webhook to apply the corresponding peering configuration. Also a given container would only need peering info for a specific NAD, if the pod is part of multiple additional networks.  Both of these can be part of another annotation on the pod. This may not be common usage, so at the moment the lowest encap under a NAD is picked and peering information from all the NADs in the inject list is added to the named container. Based on user feedback, CNO will consider the annotation support in a following release for these features.
+
